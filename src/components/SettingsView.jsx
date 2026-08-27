@@ -1,0 +1,345 @@
+import { useRef, useState } from 'react'
+import Icon from './Icon.jsx'
+import { computeEstimate, formatDate } from '../lib/estimate.js'
+import { GENRES, findGenre } from '../data/genres.js'
+import {
+  SCALES,
+  EXPERIENCE_LEVELS,
+  ENGINE_FAMILIARITY,
+  ART_APPROACHES,
+  TEAM_SIZES,
+  MULTIPLAYER_MODES,
+  AI_TOOLS,
+} from '../data/options.js'
+
+// Profil alanları sonradan değişebilmeli: bir proje ilerledikçe kapsam
+// kararları değişir (çok oyunculudan vazgeçmek, ekibe biri katılmak gibi).
+// Değişiklik anında saat tahminini ve dolayısıyla kapı kontrollerini etkiler.
+const PROFILE_FIELDS = [
+  { key: 'genreId', label: 'Tür', options: GENRES },
+  { key: 'scaleId', label: 'Ölçek', options: SCALES },
+  { key: 'experienceId', label: 'Deneyim', options: EXPERIENCE_LEVELS },
+  { key: 'engineId', label: 'Motor aşinalığı', options: ENGINE_FAMILIARITY },
+  { key: 'artId', label: 'Sanat yaklaşımı', options: ART_APPROACHES },
+  { key: 'multiplayerId', label: 'Çok oyunculu', options: MULTIPLAYER_MODES },
+  { key: 'teamId', label: 'Ekip', options: TEAM_SIZES },
+]
+
+export default function SettingsView({ project, archive, actions }) {
+  const fileRef = useRef(null)
+  const [confirmNew, setConfirmNew] = useState(false)
+
+  const estimate = computeEstimate(project.profile)
+  const genre = findGenre(project.profile.genreId)
+
+  return (
+    <div>
+      <div className="page-head">
+        <div className="eyebrow">Ayarlar</div>
+        <h1>Proje ve veri</h1>
+      </div>
+
+      <div className="card">
+        <div className="card-head">
+          <h2>
+            <Icon name="gamepad" size={17} />
+            Proje
+          </h2>
+        </div>
+
+        <div className="field">
+          <label>Oyun adı</label>
+          <input
+            value={project.name}
+            onChange={(e) => actions.setName(e.target.value)}
+          />
+        </div>
+
+        <div className="field">
+          <label>Kullandığın motor</label>
+          <input
+            value={project.profile.engineName}
+            onChange={(e) => actions.setProfile({ engineName: e.target.value })}
+            placeholder="Godot, Unity, Unreal..."
+          />
+        </div>
+
+        <p className="card-note" style={{ marginBottom: 14 }}>
+          Aşağıdaki kararlar proje ilerledikçe değişebilir. Değiştirdiğinde saat
+          tahmini anında güncellenir. Kapsamı küçültmek her zaman meşrudur; kapsamı
+          büyütürken tarihi de gözden geçir.
+        </p>
+
+        {PROFILE_FIELDS.map((field) => (
+          <div className="field" key={field.key}>
+            <label>{field.label}</label>
+            <select
+              value={project.profile[field.key] || field.options[0].id}
+              onChange={(e) => actions.setProfile({ [field.key]: e.target.value })}
+            >
+              {field.options.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        ))}
+
+        <div className="hint-box">
+          <strong>İçerik hacmi:</strong> {genre.contentUnits[project.profile.scaleId]}
+        </div>
+
+        <div className="divider" />
+
+        <p className="card-note" style={{ marginBottom: 14 }}>
+          Tempo ve tarihi değiştirebilirsin. Değiştirdiğinde kapsam hesabı anında
+          güncellenir, çünkü bu sayılar kapı kontrollerini besliyor.
+        </p>
+
+        <div className="field-row">
+          <div className="field">
+            <label>Günlük dakika</label>
+            <input
+              type="number"
+              min="15"
+              step="15"
+              value={project.profile.dailyMinutes}
+              onChange={(e) =>
+                actions.setProfile({ dailyMinutes: Number(e.target.value) })
+              }
+            />
+          </div>
+          <div className="field">
+            <label>Haftada gün</label>
+            <input
+              type="number"
+              min="1"
+              max="7"
+              value={project.profile.daysPerWeek}
+              onChange={(e) =>
+                actions.setProfile({ daysPerWeek: Number(e.target.value) })
+              }
+            />
+          </div>
+          <div className="field">
+            <label>Hedef tarih</label>
+            <input
+              type="date"
+              value={project.profile.deadline}
+              onChange={(e) => actions.setProfile({ deadline: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className={'verdict verdict-' + estimate.verdict.tone} style={{ marginTop: 6 }}>
+          <div className="verdict-label">{estimate.verdict.label}</div>
+          <div className="verdict-message">
+            Gereken {estimate.required} saat, elindeki {estimate.available.hours} saat.
+            Hedef tarih {formatDate(project.profile.deadline)}.
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-head">
+          <h2>
+            <Icon name="sparkle" size={17} />
+            Yapay zeka asistanları ve bütçe
+          </h2>
+        </div>
+        <p className="card-note" style={{ marginBottom: 14 }}>
+          Asistanlar sadece ilgili işkolunu hızlandırır. Tasarım, oynanabilirlik
+          testi, denge ve cila hiçbir araçtan etkilenmez.
+        </p>
+
+        {AI_TOOLS.map((tool) => {
+          const on = Boolean((project.profile.aiTools || {})[tool.id])
+          const costs = project.profile.aiCosts || {}
+          return (
+            <div key={tool.id} className="item" style={{ marginBottom: 9 }}>
+              <input
+                type="checkbox"
+                className="check"
+                checked={on}
+                onChange={() =>
+                  actions.setProfile({
+                    aiTools: { ...(project.profile.aiTools || {}), [tool.id]: !on },
+                  })
+                }
+              />
+              <div className="item-body">
+                <div className="item-title">{tool.name}</div>
+              </div>
+              {on && (
+                <div style={{ width: 110 }}>
+                  <input
+                    type="number"
+                    min="0"
+                    value={
+                      costs[tool.id] === undefined ? tool.defaultMonthly : costs[tool.id]
+                    }
+                    onChange={(e) =>
+                      actions.setProfile({
+                        aiCosts: { ...costs, [tool.id]: e.target.value },
+                      })
+                    }
+                  />
+                </div>
+              )}
+            </div>
+          )
+        })}
+
+        <div className="field-row" style={{ marginTop: 14 }}>
+          <div className="field">
+            <label>Diğer aylık giderler</label>
+            <input
+              type="number"
+              min="0"
+              value={project.profile.otherMonthlyCost || 0}
+              onChange={(e) =>
+                actions.setProfile({ otherMonthlyCost: Number(e.target.value) })
+              }
+            />
+          </div>
+          <div className="field">
+            <label>Tek seferlik giderler</label>
+            <input
+              type="number"
+              min="0"
+              value={project.profile.oneTimeCost || 0}
+              onChange={(e) =>
+                actions.setProfile({ oneTimeCost: Number(e.target.value) })
+              }
+            />
+          </div>
+        </div>
+
+        {estimate.cost.total > 0 && (
+          <div className="number-row" style={{ marginTop: 0 }}>
+            <div className="number-box">
+              <div className="number-value">{estimate.cost.monthlyTotal}</div>
+              <div className="number-label">aylık gider</div>
+            </div>
+            <div className="number-box">
+              <div className="number-value">{estimate.cost.total}</div>
+              <div className="number-label">hedef tarihe kadar toplam</div>
+            </div>
+            {estimate.cost.exceedsPlan && (
+              <div className="number-box">
+                <div className="number-value" style={{ color: 'var(--bad)' }}>
+                  {estimate.cost.realisticTotal}
+                </div>
+                <div className="number-label">
+                  bu kapsam gerçekten sürerse ({estimate.cost.realisticMonths} ay)
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="card">
+        <div className="card-head">
+          <h2>
+            <Icon name="download" size={17} />
+            Veri
+          </h2>
+        </div>
+        <p className="card-note" style={{ marginBottom: 14 }}>
+          Veriler bu tarayıcıda saklanıyor. Başka bir bilgisayara taşımak veya yedek
+          almak için dışa aktar.
+        </p>
+        <div className="btn-row">
+          <button className="btn btn-sm" onClick={actions.exportData}>
+            <Icon name="download" size={15} />
+            Dışa aktar
+          </button>
+          <button className="btn btn-sm" onClick={() => fileRef.current.click()}>
+            <Icon name="upload" size={15} />
+            İçe aktar
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json"
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              const file = e.target.files[0]
+              if (!file) return
+              const reader = new FileReader()
+              reader.onload = () => actions.importData(String(reader.result))
+              reader.readAsText(file)
+              e.target.value = ''
+            }}
+          />
+        </div>
+      </div>
+
+      {archive.length > 0 && (
+        <div className="card">
+          <div className="card-head">
+            <h2>
+              <Icon name="archive" size={17} />
+              Arşiv
+            </h2>
+            <span className="chip">{archive.length} proje</span>
+          </div>
+          <ul className="item-list">
+            {archive.map((p) => (
+              <li key={p.id} className="item alt">
+                <div className="item-body">
+                  <div className="item-title">{p.name}</div>
+                  <div className="item-sub">
+                    {p.status === 'durduruldu' ? 'Durduruldu' : 'Tamamlandı'}
+                    {p.archivedAt && ', ' + formatDate(p.archivedAt.slice(0, 10))}
+                  </div>
+                  {p.killReason && (
+                    <div className="item-sub" style={{ marginTop: 4 }}>
+                      Sebep: {p.killReason}
+                    </div>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="card">
+        <div className="card-head">
+          <h2>
+            <Icon name="alert" size={17} />
+            Yeni proje
+          </h2>
+        </div>
+        <p className="card-note" style={{ marginBottom: 14 }}>
+          Aynı anda tek bir aktif proje olmasını öneriyorum. Bir saatlik günlük tempoda
+          iki projeyi birlikte yürütmek, ikisini de bitirmemenin en kısa yoludur. Yeni
+          proje başlatırsan mevcut proje arşive gider, silinmez.
+        </p>
+        {!confirmNew ? (
+          <button className="btn btn-sm btn-danger" onClick={() => setConfirmNew(true)}>
+            Yeni proje başlat
+          </button>
+        ) : (
+          <div className="btn-row">
+            <button
+              className="btn btn-sm btn-danger"
+              onClick={() => {
+                actions.archiveAndRestart()
+                setConfirmNew(false)
+              }}
+            >
+              Evet, mevcut projeyi arşivle
+            </button>
+            <button className="btn btn-sm btn-ghost" onClick={() => setConfirmNew(false)}>
+              Vazgeç
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
