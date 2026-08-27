@@ -5,6 +5,7 @@
 
 const STORAGE_KEY = 'oyunUretimPanosu'
 const THEME_KEY = 'oyunUretimPanosuTema'
+const DRAFT_KEY = 'oyunUretimPanosuTaslak'
 
 const EMPTY = { active: null, archive: [] }
 
@@ -29,6 +30,41 @@ export function saveStore(store) {
     return true
   } catch {
     return false
+  }
+}
+
+// Sihirbaz taslağı.
+//
+// Yedi adımlık bir formda girilenler yalnızca bellekte tutulursa, sayfayı
+// yenilemek veya sekmeyi kapatmak her şeyi siler. Bu bir kez gerçekten
+// yaşandı ve girilen tüm veri kayboldu. Artık her değişiklik taslak olarak
+// yazılıyor, proje başlatılınca taslak siliniyor.
+
+export function loadDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed || !parsed.form) return null
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+export function saveDraft(form, step) {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ form, step, at: Date.now() }))
+  } catch {
+    // Taslak yazılamazsa sihirbaz yine çalışır, sadece koruma olmaz.
+  }
+}
+
+export function clearDraft() {
+  try {
+    localStorage.removeItem(DRAFT_KEY)
+  } catch {
+    // Yok sayılabilir.
   }
 }
 

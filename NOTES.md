@@ -1,5 +1,30 @@
 # Proje Panosu: Durum Notu
 
+## Ne yapıldı (v2.3: sihirbaz taslağı, gerçek bir veri kaybından sonra)
+
+Kullanıcı sihirbazı doldurdu ama "Projeyi başlat" demeden önce girdiği her şey
+kayboldu. Sebep: sihirbaz formu yalnızca React'in bellek içi durumunda
+tutuluyordu ve localStorage'a ancak proje oluşturulduğunda yazılıyordu. Geliştirme
+sırasında `Wizard.jsx` düzenlendikçe Vite'ın sıcak yeniden yüklemesi bileşen
+durumunu sıfırladı ve girilen veri gitti.
+
+Bu bir kullanım hatası değil, tasarım kusuruydu: yedi adımlık bir formda sayfayı
+yenilemek her şeyi silmemeli.
+
+- `storage.js` içine `loadDraft`, `saveDraft`, `clearDraft` eklendi
+  (`oyunUretimPanosuTaslak` anahtarı).
+- `Wizard.jsx` her değişiklikte formu ve bulunulan adımı taslak olarak yazıyor,
+  açılışta varsa geri yüklüyor.
+- Geri yükleme olduğunda üstte bir bildirim ve "Baştan başla" düğmesi çıkıyor,
+  böylece eski bir taslakta sıkışıp kalmak mümkün değil.
+- Proje oluşturulunca taslak siliniyor (`App.jsx` içindeki `startProject`).
+
+Tarayıcıda doğrulandı: 4. adıma kadar veri girildi, sayfa yenilendi, form ve
+adım numarası aynen geri geldi; proje başlatılınca taslak silindi.
+
+Kaybolan veri için `KARARLAR.md` içine ayrı bir "Sisteme giriş föyü" bölümü
+yazıldı, sihirbazın yedi adımı sırayla doldurulabilecek şekilde.
+
 ## Ne yapıldı (v2.2: bütçe ve geri dönüş ekseni)
 
 Kullanıcının isteği: yayın sonrası gerçek gelirin giderleri amorte edip

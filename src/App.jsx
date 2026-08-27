@@ -28,6 +28,7 @@ import {
   saveTheme,
   exportStore,
   parseImport,
+  clearDraft,
 } from './lib/storage.js'
 
 const NAV = [
@@ -313,6 +314,8 @@ export default function App() {
 
   function startProject(form) {
     setStore((prev) => ({ ...prev, active: createProject(form) }))
+    // Proje oluştu, sihirbaz taslağına artık gerek yok.
+    clearDraft()
     setView('bugun')
     toast('Proje başladı. Konsept fazındasın.', 'good')
   }

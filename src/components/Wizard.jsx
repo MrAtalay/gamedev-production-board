@@ -1,5 +1,6 @@
-﻿import { useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import Icon from './Icon.jsx'
+import { loadDraft, saveDraft } from '../lib/storage.js'
 import { GENRES, findGenre } from '../data/genres.js'
 import {
   SCALES,
@@ -21,27 +22,40 @@ function defaultDeadline() {
 
 const STEP_COUNT = 7
 
+const EMPTY_FORM = {
+  name: '',
+  pitch: '',
+  genreId: '',
+  scaleId: 'kucuk',
+  dailyMinutes: 60,
+  daysPerWeek: 5,
+  deadline: defaultDeadline(),
+  experienceId: 'ilk',
+  engineId: 'yeni',
+  engineName: '',
+  artId: 'minimal',
+  teamId: 'tek',
+  multiplayerId: 'tek',
+  aiTools: {},
+  aiCosts: {},
+  otherMonthlyCost: 0,
+  oneTimeCost: 0,
+}
+
 export default function Wizard({ onFinish }) {
-  const [step, setStep] = useState(0)
-  const [form, setForm] = useState({
-    name: '',
-    pitch: '',
-    genreId: '',
-    scaleId: 'kucuk',
-    dailyMinutes: 60,
-    daysPerWeek: 5,
-    deadline: defaultDeadline(),
-    experienceId: 'ilk',
-    engineId: 'yeni',
-    engineName: '',
-    artId: 'minimal',
-    teamId: 'tek',
-    multiplayerId: 'tek',
-    aiTools: {},
-    aiCosts: {},
-    otherMonthlyCost: 0,
-    oneTimeCost: 0,
-  })
+  // Taslak varsa kaldığı yerden devam edilir. Sihirbaz uzun ve yenileme
+  // veya sekme kapatma her şeyi silmemeli.
+  const [draft] = useState(() => loadDraft())
+  const [restored, setRestored] = useState(() => Boolean(draft))
+  const [step, setStep] = useState(() => (draft ? draft.step : 0))
+  const [form, setForm] = useState(() =>
+    draft ? { ...EMPTY_FORM, ...draft.form } : EMPTY_FORM
+  )
+
+  // Her değişiklikte taslağı yaz.
+  useEffect(() => {
+    saveDraft(form, step)
+  }, [form, step])
 
   function set(patch) {
     setForm((prev) => ({ ...prev, ...patch }))
@@ -79,6 +93,31 @@ export default function Wizard({ onFinish }) {
           <div key={i} className={'wizard-step-dot' + (i <= step ? ' done' : '')} />
         ))}
       </div>
+
+      {restored && (
+        <div className="card card-tight" style={{ marginBottom: 20 }}>
+          <div className="row">
+            <Icon name="clock" size={17} className="muted" />
+            <div style={{ flex: 1 }}>
+              <strong className="small">Kaldığın yerden devam ediyorsun.</strong>{' '}
+              <span className="small muted">
+                Daha önce doldurduğun bilgiler geri yüklendi. Girdiklerin her
+                değişiklikte kaydediliyor, sayfayı yenilesen de kaybolmaz.
+              </span>
+            </div>
+            <button
+              className="btn btn-sm btn-ghost"
+              onClick={() => {
+                setForm(EMPTY_FORM)
+                setStep(0)
+                setRestored(false)
+              }}
+            >
+              Baştan başla
+            </button>
+          </div>
+        </div>
+      )}
 
       {step === 0 && (
         <div>
