@@ -8,6 +8,7 @@ import GateView from './components/GateView.jsx'
 import ScopeView from './components/ScopeView.jsx'
 import RisksView from './components/RisksView.jsx'
 import BoardView from './components/BoardView.jsx'
+import ContentView from './components/ContentView.jsx'
 import JournalView from './components/JournalView.jsx'
 import FinanceView from './components/FinanceView.jsx'
 import SettingsView from './components/SettingsView.jsx'
@@ -27,7 +28,7 @@ import {
   loadTheme,
   saveTheme,
   exportStore,
-  parseImport,
+  compareForImport,
   clearDraft,
 } from './lib/storage.js'
 
@@ -38,6 +39,7 @@ const NAV = [
   { id: 'kapi', label: 'Kapı', icon: 'flag', group: 'Çalışma' },
   { id: 'kapsam', label: 'Kapsam', icon: 'scale', group: 'Kayıtlar' },
   { id: 'riskler', label: 'Riskler ve Testler', icon: 'alert', group: 'Kayıtlar' },
+  { id: 'icerik', label: 'İçerik', icon: 'list', group: 'Kayıtlar' },
   { id: 'pano', label: 'Üretim Panosu', icon: 'clipboard', group: 'Kayıtlar' },
   { id: 'gunluk', label: 'Günlük', icon: 'clock', group: 'Kayıtlar' },
   { id: 'butce', label: 'Bütçe ve Geri Dönüş', icon: 'scale', group: 'Kayıtlar' },
@@ -50,6 +52,23 @@ export default function App() {
   const [view, setView] = useState('bugun')
   const [selectedPhaseId, setSelectedPhaseId] = useState(null)
   const [toasts, setToasts] = useState([])
+  // Sol panel dar mod tercihi. Dar ekranda ve odaklanmak isteyince
+  // metinler gizlenir, ikonlar kalir.
+  const [navDar, setNavDar] = useState(() => {
+    try {
+      return localStorage.getItem('oyunUretimPanosuNavDar') === '1'
+    } catch {
+      return false
+    }
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('oyunUretimPanosuNavDar', navDar ? '1' : '0')
+    } catch {
+      // Tercih yazilamazsa uygulama yine calisir.
+    }
+  }, [navDar])
 
   useEffect(() => {
     saveStore(store)
@@ -180,6 +199,53 @@ export default function App() {
       }))
     },
 
+    addContentItem(typeId, name) {
+      update((p) => ({
+        ...p,
+        content: {
+          ...(p.content || { items: [] }),
+          items: [
+            ...((p.content && p.content.items) || []),
+            { id: newId(), typeId, name, fields: {} },
+          ],
+        },
+      }))
+    },
+
+    setContentField(itemId, key, value) {
+      update((p) => ({
+        ...p,
+        content: {
+          ...(p.content || { items: [] }),
+          items: ((p.content && p.content.items) || []).map((i) =>
+            i.id === itemId ? { ...i, fields: { ...i.fields, [key]: value } } : i
+          ),
+        },
+      }))
+    },
+
+    renameContentItem(itemId, name) {
+      update((p) => ({
+        ...p,
+        content: {
+          ...(p.content || { items: [] }),
+          items: ((p.content && p.content.items) || []).map((i) =>
+            i.id === itemId ? { ...i, name } : i
+          ),
+        },
+      }))
+    },
+
+    removeContentItem(itemId) {
+      update((p) => ({
+        ...p,
+        content: {
+          ...(p.content || { items: [] }),
+          items: ((p.content && p.content.items) || []).filter((i) => i.id !== itemId),
+        },
+      }))
+    },
+
     addRisk({ text, worst }) {
       update((p) => ({
         ...p,
@@ -288,14 +354,83 @@ export default function App() {
       toast('Dosya indirildi.', 'good')
     },
 
-    importData(text) {
+    // İçe aktarma iki adımlı: önce karşılaştırma, sonra onay.
+    // Tek adımlı hali, eski bir dosyayla yeni işin üstüne yazıyordu.
+    prepareImport(text) {
       try {
-        const parsed = parseImport(text)
-        setStore(parsed)
-        toast('Veriler içe aktarıldı.', 'good')
+        return compareForImport(text, store)
       } catch {
         toast('Dosya okunamadı.', 'bad')
+        return null
       }
+    },
+
+    // İş raporunu uygular. Fark zaten hesaplanmış ve kullanıcı onaylamış
+    // olur. Rapor kapıya, kapsama ve tahmin eksenlerine dokunmaz: o
+    // alanlar burada hiç okunmuyor.
+    applyRapor(fark) {
+      const u = fark.uygulanacak
+      update((p) => {
+        const yeniOturumlar = [
+          ...p.sessions,
+          ...u.oturumlar.map((o) => ({
+            id: newId(),
+            date: o.tarih || todayStr(),
+            minutes: o.dakika,
+            note: o.not,
+            kaynak: 'rapor',
+          })),
+          // Notlar da günlüğe düşer, süresiz kayıt olarak.
+          ...u.notlar.map((n) => ({
+            id: newId(),
+            date: todayStr(),
+            minutes: 0,
+            note: n,
+            kaynak: 'rapor',
+          })),
+        ]
+        const yeniAdimlar = { ...p.doneSteps }
+        u.adimlar.forEach((id) => {
+          yeniAdimlar[id] = true
+        })
+        const yeniTeslimatlar = { ...p.doneDeliverables }
+        u.teslimatlar.forEach((id) => {
+          yeniTeslimatlar[id] = true
+        })
+        const mevcutIcerik = (p.content && p.content.items) || []
+        const eklenmis = u.eklenen.map((x) => ({
+          id: newId(),
+          typeId: x.typeId,
+          name: x.name,
+          fields: x.fields || {},
+        }))
+        const guncellenmis = mevcutIcerik.map((i) => {
+          const g = u.guncellenen.find((x) => x.id === i.id)
+          return g ? { ...i, fields: { ...i.fields, ...g.fields } } : i
+        })
+        return {
+          ...p,
+          sessions: yeniOturumlar,
+          doneSteps: yeniAdimlar,
+          doneDeliverables: yeniTeslimatlar,
+          content: { ...(p.content || {}), items: [...guncellenmis, ...eklenmis] },
+          bugs: [
+            ...p.bugs,
+            ...u.hatalar.map((h) => ({
+              id: newId(),
+              text: h.text,
+              severity: h.severity,
+              done: false,
+            })),
+          ],
+        }
+      })
+      toast(fark.toplam + ' madde uygulandı.', 'good')
+    },
+
+    applyImport(gelen) {
+      setStore({ active: gelen.active, archive: gelen.archive })
+      toast('Veriler içe aktarıldı.', 'good')
     },
 
     archiveAndRestart() {
@@ -348,17 +483,33 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand">
+      <aside className={'sidebar' + (navDar ? ' sidebar-dar' : '')}>
+        <div className="brand" title={navDar ? project.name : undefined}>
           <div className="brand-mark">
             <Icon name="gamepad" size={17} />
           </div>
-          <div>
+          <div className="brand-text">
             <div className="brand-name">{project.name}</div>
             <div className="brand-sub">
               Faz {task.phase.no}: {task.phase.name}
             </div>
           </div>
+          {/*
+            Daralt/genişlet düğmesi markanın yanında ama markanın KENDİSİ
+            değil. Bir logoya basmanın paneli kapatması beklenen bir
+            davranış değildir ve hiçbir şey tıklanabilir olduğunu
+            göstermez. Dar moddayken bu, geri dönüş yolu olmayan bir
+            duruma sokar: panel okunmuyor ve açma yolu görünmüyor.
+          */}
+          <button
+            className="nav-toggle"
+            onClick={() => setNavDar(!navDar)}
+            title={navDar ? 'Paneli genişlet' : 'Paneli daralt'}
+            aria-label={navDar ? 'Paneli genişlet' : 'Paneli daralt'}
+            aria-expanded={!navDar}
+          >
+            <Icon name={navDar ? 'chevronRight' : 'chevronLeft'} size={16} />
+          </button>
         </div>
 
         <nav className="nav">
@@ -373,9 +524,10 @@ export default function App() {
                     if (item.id === 'faz') setSelectedPhaseId(null)
                     setView(item.id)
                   }}
+                  title={navDar ? item.label : undefined}
                 >
                   <Icon name={item.icon} size={17} />
-                  <span>{item.label}</span>
+                  <span className="nav-text">{item.label}</span>
                   {badges[item.id] && (
                     <span className="badge-count">{badges[item.id]}</span>
                   )}
@@ -386,9 +538,9 @@ export default function App() {
         </nav>
 
         <div className="sidebar-foot">
-          <div className="theme-row">
+          <div className="theme-row" title="Karanlık tema">
             <Icon name="moon" size={15} />
-            <span className="grow">Karanlık tema</span>
+            <span className="grow nav-text">Karanlık tema</span>
             <label className="switch">
               <input
                 type="checkbox"
@@ -425,8 +577,13 @@ export default function App() {
         )}
         {view === 'kapsam' && <ScopeView project={project} actions={actions} />}
         {view === 'riskler' && <RisksView project={project} actions={actions} />}
+        {view === 'icerik' && (
+          <ContentView project={project} actions={actions} toast={toast} />
+        )}
         {view === 'pano' && <BoardView project={project} actions={actions} />}
-        {view === 'gunluk' && <JournalView project={project} />}
+        {view === 'gunluk' && (
+          <JournalView project={project} actions={actions} toast={toast} />
+        )}
         {view === 'butce' && <FinanceView project={project} actions={actions} />}
         {view === 'ayarlar' && (
           <SettingsView project={project} archive={store.archive} actions={actions} />

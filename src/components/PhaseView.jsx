@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Icon from './Icon.jsx'
+import { totalContentUnits } from '../lib/content.js'
 import { PHASES } from '../data/phases.js'
 import {
   phaseDeliverables,
@@ -27,6 +28,9 @@ function DeliverableCard({ project, deliverable, actions, goTo }) {
 
   const managed = deliverable.field ? MANAGED_ELSEWHERE[deliverable.field] : null
   const isUnitField = deliverable.field === 'unitHours'
+  // İçerik ekranındaki sayım. Birim sayısını tahmin etmek yerine
+  // sayabiliyorsa, kullanıcıya bunu hatırlatıyoruz.
+  const contentUnitCount = totalContentUnits(project)
   const isTextField = deliverable.field && !managed && !isUnitField
 
   return (
@@ -128,6 +132,24 @@ function DeliverableCard({ project, deliverable, actions, goTo }) {
                   onChange={(e) => actions.setField('plannedUnits', e.target.value)}
                 />
               </div>
+            </div>
+          )}
+
+          {isUnitField && contentUnitCount > 0 && (
+            <div className="hint-box" style={{ marginTop: 12 }}>
+              İçerik ekranında <strong>{contentUnitCount} bileşen</strong> girilmiş.
+              Bu sayı tahmin değil, sayım.{' '}
+              {String(project.fields.plannedUnits) === String(contentUnitCount) ? (
+                'Yukarıdaki alan bu sayıyla aynı.'
+              ) : (
+                <button
+                  className="btn btn-sm"
+                  style={{ marginLeft: 6 }}
+                  onClick={() => actions.setField('plannedUnits', String(contentUnitCount))}
+                >
+                  {contentUnitCount} olarak yaz
+                </button>
+              )}
             </div>
           )}
 

@@ -1281,3 +1281,171 @@ textarea:focus {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---- Karşılaştırma tablosu ---- */
+/*
+ * İçe aktarma öncesi "şu an burada" ile "dosyada" karşılaştırması.
+ * Dar ekranda kendi kabında yatay kayar, sayfa gövdesi kaymaz.
+ */
+
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  color: var(--text);
+}
+
+.compare-table th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 8px 12px 8px 0;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.compare-table td {
+  padding: 8px 12px 8px 0;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.compare-table tr:last-child td {
+  border-bottom: none;
+}
+
+.compare-table td:first-child {
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+
+/* ---- Sol panel: dar mod ---- */
+/*
+ * Panel daraltılınca metinler GİZLENİR, kırpılmaz. Kırpılmış bir yazı
+ * ("Bütçe ve Geri D...") okunmaz bir yazıdır ve panelden taşan yazıdan
+ * daha iyi değildir. Dar modda ikonlar kalır, tam ad title olarak
+ * verilir ve fareyle üstüne gelince görünür.
+ */
+
+.sidebar-dar {
+  width: 68px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.sidebar-dar .nav-text,
+.sidebar-dar .brand-text,
+.sidebar-dar .nav-label,
+.sidebar-dar .badge-count {
+  display: none;
+}
+
+.sidebar-dar .brand,
+.sidebar-dar .nav-item,
+.sidebar-dar .theme-row,
+.sidebar-dar .nav-toggle {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+  gap: 0;
+}
+
+/* Dar modda gruplar arasında ayrım kalsın: başlık gizlendi, çizgi geldi. */
+.sidebar-dar .nav > div + div {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+/* Dar modda tema anahtarı ikonun altına iner, yan yana sığmıyor. */
+.sidebar-dar .theme-row {
+  flex-direction: column;
+  gap: 8px;
+}
+
+/*
+ * Daralt/genişlet düğmesi marka satırının sağ ucunda. Ayrı bir satır
+ * yerine burada durması dikey yer kazandırıyor, ama markanın kendisine
+ * bağlanmıyor: logoya basmak beklenen bir davranış değil ve dar modda
+ * geri dönüş yolunu görünmez yapardı.
+ */
+
+.brand .nav-toggle {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.nav-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.nav-toggle:hover {
+  background-color: var(--surface-alt);
+  color: var(--text);
+}
+
+/* Dar modda marka ikonu ile düğme alt alta: yan yana sığmıyorlar. */
+.sidebar-dar .brand {
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidebar-dar .brand .nav-toggle {
+  margin-left: 0;
+}
+
+/* ---- Kaydırma çubukları ---- */
+/*
+ * Yerel kaydırma çubuğu işletim sisteminin renklerinde geliyor ve
+ * karanlık temada sayfanın üstünde açık gri bir şerit olarak duruyor.
+ * Renkler CSS değişkenlerinden alınıyor, böylece tema anahtarıyla
+ * birlikte değişiyorlar.
+ *
+ * Genişlik inceltiliyor ama yok edilmiyor: görünmeyen bir kaydırma
+ * çubuğu, sayfanın devamı olduğunu gizler.
+ */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--border-strong);
+  border-radius: var(--radius-pill);
+  /* Kenarlık yerine saydam çerçeve: tutamak inceliyor ama tıklama
+     alanı geniş kalıyor. */
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-muted);
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}

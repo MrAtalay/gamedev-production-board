@@ -11,9 +11,14 @@ import {
   ART_APPROACHES,
   TEAM_SIZES,
   MULTIPLAYER_MODES,
+  PLATFORM_TARGETS,
   AI_TOOLS,
+  COMMITMENT_MODES,
+  ART_TOOL_OVERLAP,
   DEFAULT_DISCIPLINE_SHARES,
+  DEFAULT_COMMITMENT_ID,
   REALISM_FACTOR,
+  OVERTIME_REALISM_FACTOR,
   findOption,
 } from '../data/options.js'
 import { findGenre } from '../data/genres.js'
@@ -56,10 +61,17 @@ export function aiEffect(profile) {
       } else {
         factor = tool.speedup
       }
-      // Zaten minimal bir görsel dil seçildiyse görsel aracın kazancı
-      // sınırlıdır: kutu çizmek zaten hızlıdır.
-      if (discipline === 'sanat' && profile.artId === 'minimal') {
-        factor = factor + (1 - factor) * 0.5
+      // Sanat yaklaşımı ile görsel araç aynı sorunu çözüyor: sanatı
+      // kendin üretmemek. Üst üste çarpıldıklarında kazanç iki kez
+      // sayılıyordu. Önceden bu kırpma sadece "minimal" seçiliyken
+      // yapılıyordu; "hazır varlık" seçen biri kazancın tamamını
+      // alıyordu, oysa orada da işin çoğu üretmek değil seçmek ve
+      // tutarlı tutmak.
+      if (discipline === 'sanat') {
+        const overlap = ART_TOOL_OVERLAP[profile.artId]
+        if (overlap !== undefined && overlap < 1) {
+          factor = 1 - (1 - factor) * overlap
+        }
       }
     }
 
@@ -86,6 +98,8 @@ export function requiredHours(profile) {
   const team = findOption(TEAM_SIZES, profile.teamId)
   // Eski kayıtlarda bu alan yok, o yüzden varsayılan tek oyunculu.
   const multiplayer = findOption(MULTIPLAYER_MODES, profile.multiplayerId || 'tek')
+  // Aynı şekilde eski kayıtlarda platform yok, varsayılan bilgisayar.
+  const platform = findOption(PLATFORM_TARGETS, profile.platformId || 'pc')
 
   const total =
     genre.baseHours *
@@ -95,6 +109,7 @@ export function requiredHours(profile) {
     art.multiplier *
     team.multiplier *
     multiplayer.multiplier *
+    platform.multiplier *
     aiEffect(profile).factor
 
   return Math.round(total)
@@ -105,17 +120,108 @@ export function requiredHoursWithoutAi(profile) {
   return requiredHours({ ...profile, aiTools: {} })
 }
 
+// Kullanıcının kendi durumuna göre sürdürülebilir günlük üst sınır.
+// Eski kayıtlarda bu alan yok, o yüzden varsayılana düşülüyor.
+export function commitmentCeiling(profile) {
+  const mode = findOption(COMMITMENT_MODES, profile.commitmentId || DEFAULT_COMMITMENT_ID)
+  return mode.sustainableDailyMinutes
+}
+
 // Elindeki gerçekçi saat. Planlanan sürenin tamamı çalışmaya dönüşmez,
 // bu yüzden gerçeklik katsayısı uygulanır ve kullanıcıya açıkça gösterilir.
+//
+// Katsayı tek parça değil: sürdürülebilir sınırın altındaki saatler ile
+// üstündeki saatler aynı değerde sayılmaz. Sabit bir katsayı, yüksek tempo
+// girildiğinde elindeki saati olduğundan fazla gösteriyordu.
 export function availableHours(profile) {
-  const weekly = (profile.dailyMinutes / 60) * profile.daysPerWeek
+  const ceiling = commitmentCeiling(profile)
+  const daily = Number(profile.dailyMinutes) || 0
+  const days = Number(profile.daysPerWeek) || 0
+  const withinLimit = Math.min(daily, ceiling)
+  const overLimit = Math.max(0, daily - ceiling)
+
   const weeks = weeksUntil(profile.deadline)
-  const raw = weekly * weeks
+  const weeklyRaw = (daily / 60) * days
+  const weeklyWithin = (withinLimit / 60) * days
+  const weeklyOver = (overLimit / 60) * days
+
+  const effectiveWeekly =
+    weeklyWithin * REALISM_FACTOR + weeklyOver * OVERTIME_REALISM_FACTOR
+
   return {
-    weeklyHours: Math.round(weekly * 10) / 10,
+    weeklyHours: Math.round(weeklyRaw * 10) / 10,
     weeks: Math.round(weeks * 10) / 10,
-    rawHours: Math.round(raw),
-    hours: Math.round(raw * REALISM_FACTOR),
+    rawHours: Math.round(weeklyRaw * weeks),
+    hours: Math.round(effectiveWeekly * weeks),
+    ceiling,
+    overDailyMinutes: overLimit,
+    overWeeklyHours: Math.round(weeklyOver * 10) / 10,
+    // Arayüzde gösterilen katsayı artık sabit değil, tempoya göre değişir.
+    effectiveFactor:
+      weeklyRaw > 0 ? effectiveWeekly / weeklyRaw : REALISM_FACTOR,
+  }
+}
+
+// Haftada belli bir etkin saate ulaşmak için gereken günlük dakika.
+//
+// availableHours artık iki katsayılı olduğu için bunun tersi de iki
+// parçalı: tavana kadar olan saatler REALISM_FACTOR ile, üstündekiler
+// OVERTIME_REALISM_FACTOR ile sayılır. Düz bölme yapmak, tavanın
+// üstündeki tempolarda gereken süreyi olduğundan az gösterirdi.
+function dailyMinutesForWeeklyHours(profile, targetWeeklyHours) {
+  const days = Number(profile.daysPerWeek) || 0
+  if (days <= 0 || targetWeeklyHours <= 0) return 0
+
+  const ceiling = commitmentCeiling(profile)
+  const ceilingWeeklyHours = (ceiling / 60) * days
+  const withinCapacity = ceilingWeeklyHours * REALISM_FACTOR
+
+  if (targetWeeklyHours <= withinCapacity) {
+    return Math.ceil((targetWeeklyHours / REALISM_FACTOR / days) * 60)
+  }
+  const overtimeWeeklyHours =
+    (targetWeeklyHours - withinCapacity) / OVERTIME_REALISM_FACTOR
+  return Math.ceil(ceiling + (overtimeWeeklyHours / days) * 60)
+}
+
+// Tempo gerçeklik kontrolü.
+//
+// Sistemin en kolay kandırılan yeri burasıydı: kapsam sığmayınca günlük
+// süreyi büyütmek kararı yeşile çeviriyordu. Aritmetik doğruydu, plan
+// değildi. Bu fonksiyon iki soruyu ayırıyor: tempo sürdürülebilir mi, ve
+// sürdürülebilir bir tempoyla bu kapsam zaten sığıyor mu?
+export function sustainableTempo(profile) {
+  const ceiling = commitmentCeiling(profile)
+  const daily = Number(profile.dailyMinutes) || 0
+  const days = Number(profile.daysPerWeek) || 0
+  const required = requiredHours(profile)
+
+  // Tavanın altında kalarak yeterli olan en düşük tempoyu ara.
+  // Oran tempoyla birlikte arttığı için ilk bulunan en düşüğüdür.
+  let fitting = null
+  let comfortable = null
+  for (let minutes = 15; minutes <= ceiling; minutes += 15) {
+    const hours = availableHours({ ...profile, dailyMinutes: minutes }).hours
+    const ratio = required > 0 ? hours / required : 0
+    if (fitting === null && ratio >= 0.95) fitting = minutes
+    if (ratio >= 1.15) {
+      comfortable = minutes
+      break
+    }
+  }
+
+  return {
+    ceiling,
+    daily,
+    isOver: daily > ceiling,
+    overBy: Math.max(0, daily - ceiling),
+    weeklyHours: Math.round((daily / 60) * days * 10) / 10,
+    // Tavanın altında kalarak "Rahat" veren en düşük günlük süre.
+    comfortable,
+    // Tavanın altında kalarak en azından "Sınırda" veren en düşük süre.
+    fitting,
+    // Tavana kadar hiçbir tempo yetmiyorsa sorun tempoda değil kapsamda.
+    scopeNeedsChange: fitting === null,
   }
 }
 
@@ -197,10 +303,6 @@ function verdictFor(ratio) {
   }
 }
 
-// Bir hobi projesinde sürdürülebilir günlük üst sınır. Bunun üstündeki
-// öneriler matematiksel olarak doğru ama pratikte tükenmişlik demektir,
-// o yüzden gerçekçi bir seçenek gibi sunulmazlar.
-const MAX_REALISTIC_DAILY = 240
 // Makul planlama ufku. Bunun ötesine ertelemek "bir gün yaparım" demektir.
 const MAX_HORIZON_WEEKS = 130
 
@@ -299,6 +401,29 @@ function buildLevers(profile, required, available) {
     })
   }
 
+  // 3b) İki platform yerine tek platform. Çok oyunculu kaldıracıyla aynı
+  // mantık: sonradan eklenen bir şey değil, baştan etkileyen bir karar.
+  if (profile.platformId === 'ikisi') {
+    const newRequired = requiredHours({ ...profile, platformId: 'pc' })
+    const fits = newRequired <= available
+    levers.push({
+      id: 'platform',
+      tone: fits ? 'good' : 'warn',
+      title: 'Tek platformda çık: önce bilgisayar',
+      detail:
+        required +
+        ' saatten ' +
+        newRequired +
+        ' saate iner' +
+        (fits ? ' ve bütçene sığar. ' : ', tek başına yetmese de gerçek bir kazanç. ') +
+        'İki platform, iki kontrol şeması ve iki mağaza süreci demektir. ' +
+        'Bir platformda bitirip yayınlamak, ikisinde birden yarım kalmaktan iyidir. ' +
+        'Diğer platform, ilk sürüm çıktıktan sonra gerçek veriyle planlanır.',
+      fits,
+      patch: { platformId: 'pc' },
+    })
+  }
+
   // 4) Ölçek ve sanatı birlikte küçült (ikisi tek başına yetmediyse)
   if (scaleIndex > 0 && profile.artId !== 'minimal') {
     const combined = { ...profile, scaleId: SCALES[scaleIndex - 1].id, artId: 'minimal' }
@@ -319,10 +444,14 @@ function buildLevers(profile, required, available) {
   // 4) Günlük süreyi artır
   const weeks = weeksUntil(profile.deadline)
   if (weeks > 0) {
-    const neededWeekly = required / REALISM_FACTOR / weeks
-    const neededDaily = Math.ceil((neededWeekly / profile.daysPerWeek) * 60)
+    const neededWeekly = required / weeks
+    const neededDaily = dailyMinutesForWeeklyHours(profile, neededWeekly)
     if (neededDaily > profile.dailyMinutes) {
-      const realistic = neededDaily <= MAX_REALISTIC_DAILY
+      // Sınır artık sabit değil, kullanıcının kendi beyanından geliyor.
+      // Önceden 240 dakika sabitti ve kullanıcı 360 yazdığında sistem
+      // bunu reddetmiyordu: aynı sayı, kim yazdığına göre farklı
+      // muamele görüyordu.
+      const realistic = neededDaily <= commitmentCeiling(profile)
       levers.push({
         id: 'sure',
         tone: realistic ? 'warn' : 'bad',
@@ -337,9 +466,11 @@ function buildLevers(profile, required, available) {
             ' dakika). Bunu aylarca sürdürebileceğinden eminsen seç.'
           : 'Aynı kapsamı aynı tarihte bitirmek günde ' +
             Math.round((neededDaily / 60) * 10) / 10 +
-            ' saat gerektirir. Bu, tam zamanlı bir iş temposudur ve hobi projesinde ' +
-            'aylarca sürdürülemez. Bunu bir seçenek olarak sunmuyorum, sadece ' +
-            'kapsamın ne kadar büyük olduğunu göstermek için yazıyorum.',
+            ' saat gerektirir. Kendi durumun için sürdürülebilir tavan günde ' +
+            Math.round((commitmentCeiling(profile) / 60) * 10) / 10 +
+            ' saat olarak işaretli, bu onun üstünde. Bunu bir seçenek olarak ' +
+            'sunmuyorum, sadece kapsamın ne kadar büyük olduğunu göstermek ' +
+            'için yazıyorum.',
         fits: false,
         realistic,
         patch: realistic ? { dailyMinutes: neededDaily } : null,
@@ -348,9 +479,14 @@ function buildLevers(profile, required, available) {
   }
 
   // 5) Tarihi ertele
+  //
+  // Haftalık etkin saat, mevcut temponun kendi katsayısıyla alınır. Düz
+  // REALISM_FACTOR kullanmak, tavanın üstünde çalışan biri için gereken
+  // hafta sayısını olduğundan az gösteriyordu.
   const weekly = (profile.dailyMinutes / 60) * profile.daysPerWeek
-  if (weekly > 0) {
-    const neededWeeks = Math.ceil(required / REALISM_FACTOR / weekly)
+  const effectiveWeekly = weekly * availableHours(profile).effectiveFactor
+  if (effectiveWeekly > 0) {
+    const neededWeeks = Math.ceil(required / effectiveWeekly)
     const newDate = new Date()
     newDate.setDate(newDate.getDate() + neededWeeks * 7)
     const iso = newDate.toISOString().slice(0, 10)
@@ -414,9 +550,10 @@ export function computeEstimate(profile) {
   // Planlanan maliyet, hedef tarihe göre hesaplanır. Ama proje o tarihte
   // bitmeyecekse ödemeler devam eder. Gerçek maliyet, işin gerçekten
   // süreceği zamana göre olandır ve genellikle çok daha yüksektir.
-  const weekly = (profile.dailyMinutes / 60) * profile.daysPerWeek
-  if (weekly > 0 && cost.monthlyTotal > 0) {
-    const realWeeks = required / (weekly * REALISM_FACTOR)
+  const effectiveWeekly =
+    (profile.dailyMinutes / 60) * profile.daysPerWeek * available.effectiveFactor
+  if (effectiveWeekly > 0 && cost.monthlyTotal > 0) {
+    const realWeeks = required / effectiveWeekly
     const realMonths = realWeeks / 4.345
     cost.realisticMonths = Math.round(realMonths * 10) / 10
     cost.realisticTotal = Math.round(realMonths * cost.monthlyTotal) + cost.oneTime
@@ -431,6 +568,7 @@ export function computeEstimate(profile) {
     available,
     ratio,
     verdict,
+    tempo: sustainableTempo(profile),
     realismFactor: REALISM_FACTOR,
     levers: buildLevers(profile, required, available.hours),
     gapHours: Math.max(0, required - available.hours),

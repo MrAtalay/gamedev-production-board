@@ -17,6 +17,9 @@ export function loadStore() {
     return {
       active: parsed.active || null,
       archive: Array.isArray(parsed.archive) ? parsed.archive : [],
+      // Son değişiklik damgası. İki bilgisayar arasında dosya taşınırken
+      // hangi kopyanın daha yeni olduğunu söyleyebilmek için gerekli.
+      sonDegisiklik: parsed.sonDegisiklik || null,
     }
   } catch {
     // Bozuk veri, uygulamanın açılmasını engellememeli.
@@ -26,7 +29,8 @@ export function loadStore() {
 
 export function saveStore(store) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(store))
+    const damgali = { ...store, sonDegisiklik: new Date().toISOString() }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(damgali))
     return true
   } catch {
     return false
@@ -110,5 +114,54 @@ export function parseImport(text) {
   return {
     active: parsed.active || null,
     archive: Array.isArray(parsed.archive) ? parsed.archive : [],
+    sonDegisiklik: parsed.sonDegisiklik || parsed.disaAktarma || null,
   }
+}
+
+// Bir veri kümesinin tek satırlık özeti.
+//
+// İçe aktarma öncesi karşılaştırma için. Ham JSON'a bakmadan "hangisi
+// daha ileride" sorusuna cevap verebilmek gerekiyor.
+export function storeSummary(store) {
+  const p = store && store.active
+  return {
+    projeAdi: p ? p.name : null,
+    faz: p ? p.currentPhaseId : null,
+    oturum: p && p.sessions ? p.sessions.length : 0,
+    dakika: p && p.sessions
+      ? p.sessions.reduce((t, x) => t + (Number(x.minutes) || 0), 0)
+      : 0,
+    bilesen: p && p.content && p.content.items ? p.content.items.length : 0,
+    adim: p && p.doneSteps ? Object.keys(p.doneSteps).filter((k) => p.doneSteps[k]).length : 0,
+    arsiv: store && Array.isArray(store.archive) ? store.archive.length : 0,
+    tarih: store ? store.sonDegisiklik : null,
+  }
+}
+
+// İçe aktarılacak dosya ile mevcut veriyi karşılaştırır.
+//
+// NEDEN VAR: içe aktarma önceden hiçbir şey sormadan her şeyin üstüne
+// yazıyordu ve yeşil bir "Veriler içe aktarıldı" bildirimi gösteriyordu.
+// İki bilgisayar arasında dosya taşıyan biri için bu, eski bir dosyayla
+// yeni işini silmek demekti. Bu projede bir kez gerçek veri kaybı yaşandı;
+// aynı hatanın ikinci biçimi burasıydı.
+export function compareForImport(text, currentStore) {
+  const gelen = parseImport(text)
+  const mevcut = storeSummary(currentStore)
+  const yeni = storeSummary(gelen)
+
+  let dahaEski = false
+  if (mevcut.tarih && yeni.tarih) {
+    dahaEski = new Date(yeni.tarih).getTime() < new Date(mevcut.tarih).getTime()
+  }
+
+  // Tarih olmasa bile ilerleme geriliyorsa uyarılır: tarih damgası
+  // olmayan eski bir dosya da veri kaybettirebilir.
+  const gerileme =
+    yeni.oturum < mevcut.oturum ||
+    yeni.adim < mevcut.adim ||
+    yeni.bilesen < mevcut.bilesen ||
+    yeni.dakika < mevcut.dakika
+
+  return { gelen, mevcut, yeni, dahaEski, gerileme, bosMu: !gelen.active }
 }

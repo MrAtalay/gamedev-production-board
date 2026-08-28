@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import Icon from './Icon.jsx'
-import { STORES, REVENUE_FIELDS } from '../data/publishing.js'
-import { breakEven, scenarios, revenueSettings } from '../lib/money.js'
+import { REVENUE_FIELDS, storesFor } from '../data/publishing.js'
+import { PLATFORM_TARGETS, findOption } from '../data/options.js'
+import { breakEven, scenarios, revenueSettings, findStore, storeFeeInfo } from '../lib/money.js'
 import { CURRENCIES, fetchRate, loadCachedRate } from '../lib/rates.js'
 
 function money(value, rate, currency) {
@@ -21,6 +22,13 @@ export default function FinanceView({ project, actions }) {
   const be = breakEven(project)
   const rows = scenarios(project)
   const r = revenueSettings(project.profile)
+  const platform = findOption(PLATFORM_TARGETS, project.profile.platformId || 'pc')
+  const selectedStore = findStore(project.profile.storeId)
+  // Platform sonradan değiştirilmişse seçili mağaza artık geçersiz olabilir.
+  // Sessizce başka bir mağazanın oranlarıyla hesap yapmak, yanlış sayı
+  // göstermek olurdu.
+  const storeMatchesPlatform = platform.stores.includes(selectedStore.id)
+  const feeInfo = storeFeeInfo(project.profile)
 
   // Kur bilgisi render sırasında türetiliyor: önce bu oturumda alınan,
   // yoksa önbellekteki.
@@ -131,8 +139,13 @@ export default function FinanceView({ project, actions }) {
             Nerede yayınlayacaksın?
           </h2>
         </div>
+        <p className="card-note" style={{ marginBottom: 14 }}>
+          Liste, seçtiğin platforma göre daraltıldı:{' '}
+          {platform.name}.
+          Platformu Ayarlar ekranından değiştirebilirsin.
+        </p>
         <div className="choice-grid">
-          {STORES.map((s) => (
+          {storesFor(platform.stores).map((s) => (
             <button
               key={s.id}
               className={
@@ -144,6 +157,87 @@ export default function FinanceView({ project, actions }) {
               <div className="choice-desc">{s.note}</div>
             </button>
           ))}
+        </div>
+
+        {!storeMatchesPlatform && (
+          <div className="rules" style={{ marginTop: 16, marginBottom: 0 }}>
+            <div className="rules-title">
+              <Icon name="alert" size={15} />
+              Seçili mağaza bu platformda yok
+            </div>
+            <p style={{ fontSize: 13.5, margin: 0 }}>
+              Platform <strong>{platform.name}</strong>, ama seçili mağaza{' '}
+              <strong>{selectedStore.name}</strong>. Aşağıdaki gelir hesabı hâlâ{' '}
+              {selectedStore.name} oranlarıyla yapılıyor ve bu platform için yanlış.
+              Yukarıdan doğru mağazayı seç.
+            </p>
+          </div>
+        )}
+
+        <div className="field" style={{ marginTop: 16 }}>
+          <label>
+            {selectedStore.name} kayıt ücreti
+            {(feeInfo.unknown || feeInfo.stale || feeInfo.source === 'sistem') && (
+              <span className="chip chip-warn" style={{ marginLeft: 8 }}>
+                doğrula
+              </span>
+            )}
+          </label>
+          <div className="help">
+            {feeInfo.unknown &&
+              'Bu mağazanın ücreti sisteme yazılmadı, çünkü tutar zamanla ve ülkeye ' +
+                'göre değişiyor. Boş bırakırsan hesaba sıfır girer ve maliyet ' +
+                'olduğundan az görünür.'}
+            {feeInfo.source === 'sistem' &&
+              'Sistemin son bildiği tutar ' +
+                feeInfo.value +
+                ' USD ve bu bilgi ' +
+                feeInfo.asOf +
+                ' tarihine ait. O tarihten sonra değişmiş olabilir, mağazadan ' +
+                'kontrol et. Buraya bir değer girersen sistemin tutarını ezer.'}
+            {feeInfo.source === 'kullanici' &&
+              'Bu tutarı sen girdin, hesapta bu kullanılıyor.'}
+          </div>
+          <div className="field-row">
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label className="tiny muted">Tutar (USD)</label>
+              <input
+                type="number"
+                min="0"
+                placeholder={feeInfo.source === 'sistem' ? String(feeInfo.value) : '0'}
+                value={(project.profile.storeFees || {})[selectedStore.id] || ''}
+                onChange={(e) =>
+                  actions.setProfile({
+                    storeFees: {
+                      ...(project.profile.storeFees || {}),
+                      [selectedStore.id]: e.target.value,
+                    },
+                  })
+                }
+              />
+            </div>
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label className="tiny muted">Ne zaman kontrol ettin?</label>
+              <input
+                type="month"
+                value={(project.profile.storeFeeCheckedAt || {})[selectedStore.id] || ''}
+                onChange={(e) =>
+                  actions.setProfile({
+                    storeFeeCheckedAt: {
+                      ...(project.profile.storeFeeCheckedAt || {}),
+                      [selectedStore.id]: e.target.value,
+                    },
+                  })
+                }
+              />
+            </div>
+          </div>
+          {feeInfo.stale && (
+            <div className="hint-box" style={{ marginTop: 12, marginBottom: 0 }}>
+              Bu tutar {feeInfo.ageMonths} aylık. Mağaza ücretleri sık değişmez ama
+              yıllar içinde değişir. Yayına yaklaşırken bir kez daha kontrol et.
+            </div>
+          )}
         </div>
       </div>
 

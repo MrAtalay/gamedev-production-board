@@ -40,6 +40,21 @@ Bu proje bir planlama aracı değil, bir disiplin aracı. Metinler buna göre ya
   yapılacağı, ne kadar süreceği ve bittiğinin nasıl anlaşılacağı yazılıdır.
   Bu, gösterilen sayıların etiketleri için de geçerlidir: bir sayının ne
   olduğu belirsizse, doğru olması yetmez.
+- **Sistem kendi kuralını kullanıcının girdisine de uygular.** Bir sayıyı
+  kendi önerisi olarak reddedip, kullanıcı elle yazdığında kabul etmek
+  tutarsızlıktır. Bu bir kez yaşandı: sistem 360 dakikalık günlük tempoyu
+  kendi kaldıracı olarak "gerçekçi değil" diye işaretliyor, ama kullanıcı
+  aynı sayıyı sihirbaza yazdığında "Rahat" diyordu.
+- **Sınır, tahmin edilmez, sorulur.** Sürdürülebilir günlük süre kişinin
+  günün geri kalanında ne yaptığına bağlıdır. Sabit bir üst sınır yazmak
+  yerine kullanıcıya durumu sorulur ve sınır oradan türetilir.
+- **Yazılı sayılar da eskir.** Bilinen bir sayıyı koda yazmak yetmez,
+  ne zaman doğru olduğu da yazılır ve arayüz bunu söyler. Sessizce eski
+  bir sayı göstermek, sayıyı hiç göstermemekten kötüdür.
+- **Sistem sadece doğrulayabildiğini söyler.** Veriye bakarak
+  hesaplanabilen şey söylenir ("iki bossun canı aynı"), oynanarak
+  anlaşılan şey söylenmez ("bu boss eğlenceli değil"). Hesaplanan bulgu
+  da emir kipinde değil, durum bildirir: "şu durum var, kasıtlı mı".
 - **Bilinmeyen sayı uydurulmaz.** Vergi oranları, ülkeye özgü kesintiler ve
   kişisel duruma bağlı değerler koda yazılmaz. Varsayılanları sıfır bırakılır,
   kullanıcıdan kendi durumunu girmesi istenir ve alan "doğrula" olarak

@@ -9,7 +9,10 @@ import {
   ART_APPROACHES,
   TEAM_SIZES,
   MULTIPLAYER_MODES,
+  PLATFORM_TARGETS,
   AI_TOOLS,
+  COMMITMENT_MODES,
+  DEFAULT_COMMITMENT_ID,
   findOption,
 } from '../data/options.js'
 import { computeEstimate, formatDate, hoursByPhase } from '../lib/estimate.js'
@@ -27,6 +30,7 @@ const EMPTY_FORM = {
   pitch: '',
   genreId: '',
   scaleId: 'kucuk',
+  commitmentId: DEFAULT_COMMITMENT_ID,
   dailyMinutes: 60,
   daysPerWeek: 5,
   deadline: defaultDeadline(),
@@ -36,6 +40,7 @@ const EMPTY_FORM = {
   artId: 'minimal',
   teamId: 'tek',
   multiplayerId: 'tek',
+  platformId: 'pc',
   aiTools: {},
   aiCosts: {},
   otherMonthlyCost: 0,
@@ -266,6 +271,30 @@ export default function Wizard({ onFinish }) {
           </div>
 
           <div className="card">
+            <div className="field">
+              <label>Günün geri kalanında ne yapıyorsun?</label>
+              <div className="help">
+                Günde kaç saat ayırabileceğin, bu cevaba bağlı. Sürdürülebilir
+                üst sınırı tahmin etmek yerine sana soruyoruz.
+              </div>
+              <div className="choice-grid">
+                {COMMITMENT_MODES.map((o) => (
+                  <button
+                    key={o.id}
+                    className={
+                      'choice' + (form.commitmentId === o.id ? ' selected' : '')
+                    }
+                    onClick={() => set({ commitmentId: o.id })}
+                  >
+                    <div className="choice-title">{o.name}</div>
+                    <div className="choice-desc">{o.note}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="divider" />
+
             <div className="field-row">
               <div className="field">
                 <label>Günde kaç dakika?</label>
@@ -302,6 +331,58 @@ export default function Wizard({ onFinish }) {
                 onChange={(e) => set({ deadline: e.target.value })}
               />
             </div>
+
+            {estimate && estimate.tempo.isOver && (
+              <div className="rules" style={{ marginTop: 18, marginBottom: 0 }}>
+                <div className="rules-title">
+                  <Icon name="alert" size={15} />
+                  Bu tempo sürdürülebilir görünmüyor
+                </div>
+                <p style={{ fontSize: 13.5, margin: '0 0 8px' }}>
+                  {findOption(COMMITMENT_MODES, form.commitmentId).name} dedin.
+                  Günde {form.dailyMinutes} dakika, haftada {form.daysPerWeek} gün,
+                  bunun üstüne haftada {estimate.tempo.weeklyHours} saat demek.
+                  Bu, senin durumun için sürdürülebilir kabul edilen{' '}
+                  {Math.round((estimate.tempo.ceiling / 60) * 10) / 10} saatlik
+                  günlük tavanın {Math.round((estimate.tempo.overBy / 60) * 10) / 10}{' '}
+                  saat üstünde.
+                </p>
+                {estimate.tempo.scopeNeedsChange ? (
+                  <p style={{ fontSize: 13.5, margin: 0 }}>
+                    Ve tavanın altındaki hiçbir tempo bu kapsama yetmiyor. Bu, tempo
+                    sorunu değil kapsam sorunu: günlük süreyi büyütmek kararı
+                    yeşile çevirir ama planı gerçek yapmaz. Son adımdaki kapsam
+                    seçeneklerini kullan.
+                  </p>
+                ) : (
+                  <>
+                    <p style={{ fontSize: 13.5, margin: '0 0 10px' }}>
+                      Buna gerek de yok: aynı kapsam günde{' '}
+                      <strong>
+                        {estimate.tempo.comfortable || estimate.tempo.fitting} dakika
+                      </strong>{' '}
+                      ile de{' '}
+                      {estimate.tempo.comfortable ? 'rahat sığıyor' : 'sınırda sığıyor'}.
+                      Sürdürebileceğin tempoyu yazmak, sığdırmak için tempoyu
+                      büyütmekten iyidir.
+                    </p>
+                    <button
+                      className="btn"
+                      onClick={() =>
+                        set({
+                          dailyMinutes:
+                            estimate.tempo.comfortable || estimate.tempo.fitting,
+                        })
+                      }
+                    >
+                      Günlük süreyi{' '}
+                      {estimate.tempo.comfortable || estimate.tempo.fitting} dakikaya
+                      indir
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
 
             {estimate && (
               <>
@@ -345,12 +426,23 @@ export default function Wizard({ onFinish }) {
                 <div className="hint-box">
                   Ham hesap {estimate.available.rawHours} saat veriyor, ama biz bunu
                   {' '}
-                  {Math.round(estimate.realismFactor * 100)}
+                  {Math.round(estimate.available.effectiveFactor * 100)}
                   {'% '}
                   ile çarpıp {estimate.available.hours} saat kabul ediyoruz. Sebebi basit:
                   hastalık, iş yoğunluğu, motivasyon düşüşü ve araç sorunları planlanan
                   sürenin bir kısmını her zaman yer. Bu payı baştan ayırmak, sonradan
                   şaşırmaktan iyidir.
+                  {estimate.available.overDailyMinutes > 0 && (
+                    <>
+                      {' '}
+                      Bu oran normalde{' '}
+                      {Math.round(estimate.realismFactor * 100)}%, ama sürdürülebilir
+                      tavanın üstündeki günlük{' '}
+                      {estimate.available.overDailyMinutes} dakika ayrıca ve daha
+                      düşük katsayıyla sayıldığı için aşağı indi. Dolu bir günün
+                      sonundaki saatler, günün ilk saatleriyle aynı işi çıkarmıyor.
+                    </>
+                  )}
                 </div>
               </>
             )}
@@ -444,6 +536,30 @@ export default function Wizard({ onFinish }) {
                       'choice' + (form.multiplayerId === o.id ? ' selected' : '')
                     }
                     onClick={() => set({ multiplayerId: o.id })}
+                  >
+                    <div className="choice-title">{o.name}</div>
+                    <div className="choice-desc">{o.note}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="field">
+              <label>Hangi platformda çıkacak?</label>
+              <div className="help">
+                Platform, sonradan eklenen bir şey değil: kontrol şemasını,
+                arayüz yerleşimini ve test sürecini baştan belirler.
+              </div>
+              <div className="choice-grid">
+                {PLATFORM_TARGETS.map((o) => (
+                  <button
+                    key={o.id}
+                    className={
+                      'choice' + (form.platformId === o.id ? ' selected' : '')
+                    }
+                    onClick={() => set({ platformId: o.id })}
                   >
                     <div className="choice-title">{o.name}</div>
                     <div className="choice-desc">{o.note}</div>

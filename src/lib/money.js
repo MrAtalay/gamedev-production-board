@@ -3,7 +3,7 @@
 // Sistemin üçüncü ekseni. Saat ve para giderken, bu da paranın geri gelip
 // gelmeyeceğini soruyor.
 
-import { STORES, REVENUE_DEFAULTS } from '../data/publishing.js'
+import { STORES, REVENUE_DEFAULTS, FEE_STALE_MONTHS } from '../data/publishing.js'
 import { computeEstimate } from './estimate.js'
 
 export function findStore(id) {
@@ -12,6 +12,65 @@ export function findStore(id) {
 
 export function revenueSettings(profile) {
   return { ...REVENUE_DEFAULTS, ...(profile.revenue || {}) }
+}
+
+// Mağaza kayıt ücreti ve o ücretin ne kadar güvenilir olduğu.
+//
+// Üç durum var ve arayüzde üçü de ayrı görünür:
+//   - Kullanıcı kendi kontrol edip girmiş: en güvenilir. Kontrol tarihi
+//     de saklanır ve eskidiğinde uyarılır.
+//   - Sisteme yazılı, tarihi belli (Steam): "son bildiğim tutar bu" denir.
+//   - Hiçbiri yok: sıfır kabul edilir ve maliyetin eksik olduğu söylenir.
+//
+// Sessizce eski bir sayı göstermek, bu aracın var oluş sebebine aykırı.
+export function storeFeeInfo(profile) {
+  const store = findStore(profile.storeId)
+  // Ücret mağaza başına saklanır. Tek bir alanda tutulduğunda, App Store
+  // için girilen tutar mağaza Steam'e çevrilince Steam'in ücreti gibi
+  // görünüyordu: yanlış mağazanın sayısıyla hesap yapmak.
+  const entered = (profile.storeFees || {})[profile.storeId]
+  const hasEntered =
+    entered !== undefined && entered !== '' && !Number.isNaN(Number(entered))
+
+  if (hasEntered) {
+    const checkedAt = (profile.storeFeeCheckedAt || {})[profile.storeId] || ''
+    return {
+      value: Number(entered),
+      source: 'kullanici',
+      asOf: checkedAt,
+      stale: checkedAt ? monthsSince(checkedAt) > FEE_STALE_MONTHS : false,
+      ageMonths: checkedAt ? monthsSince(checkedAt) : null,
+      unknown: false,
+    }
+  }
+
+  if (store.verifyFee) {
+    // Bu mağaza için sisteme bir tutar yazılmadı ve kullanıcı da girmedi.
+    return { value: 0, source: 'yok', asOf: null, stale: false, ageMonths: null, unknown: true }
+  }
+
+  return {
+    value: store.oneTimeFee,
+    source: 'sistem',
+    asOf: store.feeKnownAsOf || null,
+    stale: store.feeKnownAsOf ? monthsSince(store.feeKnownAsOf) > FEE_STALE_MONTHS : false,
+    ageMonths: store.feeKnownAsOf ? monthsSince(store.feeKnownAsOf) : null,
+    unknown: false,
+  }
+}
+
+// 'YYYY-MM' veya 'YYYY-MM-DD' biçiminden bugüne kaç ay geçtiği.
+function monthsSince(yyyymm) {
+  const parts = String(yyyymm).split('-')
+  const year = Number(parts[0])
+  const month = Number(parts[1])
+  if (!year || !month) return 0
+  const now = new Date()
+  return (now.getFullYear() - year) * 12 + (now.getMonth() + 1 - month)
+}
+
+export function storeFeeFor(profile) {
+  return storeFeeInfo(profile).value
 }
 
 // Bir kopyanın satışından cebine gerçekten giren para.
@@ -77,7 +136,9 @@ export function breakEven(project) {
     estimate.cost.realisticTotal !== undefined
       ? estimate.cost.realisticTotal
       : estimate.cost.total
-  const totalCost = recurring + store.oneTimeFee
+  const feeInfo = storeFeeInfo(profile)
+  const storeFee = feeInfo.value
+  const totalCost = recurring + storeFee
 
   const net = chain.net
   const unitsToBreakEven = net > 0 ? Math.ceil(totalCost / net) : null
@@ -98,7 +159,8 @@ export function breakEven(project) {
   return {
     totalCost,
     recurringCost: recurring,
-    storeFee: store.oneTimeFee,
+    storeFee,
+    feeInfo,
     netPerUnit: net,
     unitsToBreakEven,
     expectedUnits: expected,

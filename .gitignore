@@ -26,3 +26,7 @@ KARARLAR.md
 *.njsproj
 *.sln
 *.sw?
+
+# Tek dosyaya gomulmus pano (npm run tek-dosya ile uretilir).
+# Uretilen bir cikti oldugu icin repoda tutulmuyor.
+pano.html

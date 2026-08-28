@@ -9,7 +9,10 @@ import {
   ART_APPROACHES,
   TEAM_SIZES,
   MULTIPLAYER_MODES,
+  PLATFORM_TARGETS,
   AI_TOOLS,
+  COMMITMENT_MODES,
+  DEFAULT_COMMITMENT_ID,
 } from '../data/options.js'
 
 // Profil alanları sonradan değişebilmeli: bir proje ilerledikçe kapsam
@@ -22,12 +25,15 @@ const PROFILE_FIELDS = [
   { key: 'engineId', label: 'Motor aşinalığı', options: ENGINE_FAMILIARITY },
   { key: 'artId', label: 'Sanat yaklaşımı', options: ART_APPROACHES },
   { key: 'multiplayerId', label: 'Çok oyunculu', options: MULTIPLAYER_MODES },
+  { key: 'platformId', label: 'Platform', options: PLATFORM_TARGETS },
   { key: 'teamId', label: 'Ekip', options: TEAM_SIZES },
 ]
 
 export default function SettingsView({ project, archive, actions }) {
   const fileRef = useRef(null)
   const [confirmNew, setConfirmNew] = useState(false)
+  // İçe aktarma iki adımlı: dosya seçilince önce karşılaştırma gösterilir.
+  const [pendingImport, setPendingImport] = useState(null)
 
   const estimate = computeEstimate(project.profile)
   const genre = findGenre(project.profile.genreId)
@@ -97,6 +103,20 @@ export default function SettingsView({ project, archive, actions }) {
           güncellenir, çünkü bu sayılar kapı kontrollerini besliyor.
         </p>
 
+        <div className="field">
+          <label>Günün geri kalanında ne yapıyorsun?</label>
+          <select
+            value={project.profile.commitmentId || DEFAULT_COMMITMENT_ID}
+            onChange={(e) => actions.setProfile({ commitmentId: e.target.value })}
+          >
+            {COMMITMENT_MODES.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="field-row">
           <div className="field">
             <label>Günlük dakika</label>
@@ -131,6 +151,26 @@ export default function SettingsView({ project, archive, actions }) {
             />
           </div>
         </div>
+
+        {estimate.tempo.isOver && (
+          <div className="rules" style={{ marginTop: 14 }}>
+            <div className="rules-title">
+              <Icon name="alert" size={15} />
+              Bu tempo sürdürülebilir görünmüyor
+            </div>
+            <p style={{ fontSize: 13.5, margin: 0 }}>
+              Günde {project.profile.dailyMinutes} dakika, senin durumun için
+              sürdürülebilir kabul edilen{' '}
+              {Math.round((estimate.tempo.ceiling / 60) * 10) / 10} saatlik tavanın
+              üstünde. Aşağıdaki karar, sürdüremeyeceğin bir tempoya dayanıyorsa
+              güvenilir değildir.
+              {!estimate.tempo.scopeNeedsChange &&
+                ' Aynı kapsam günde ' +
+                  (estimate.tempo.comfortable || estimate.tempo.fitting) +
+                  ' dakikayla da sığıyor.'}
+            </p>
+          </div>
+        )}
 
         <div className={'verdict verdict-' + estimate.verdict.tone} style={{ marginTop: 6 }}>
           <div className="verdict-label">{estimate.verdict.label}</div>
@@ -269,12 +309,116 @@ export default function SettingsView({ project, archive, actions }) {
               const file = e.target.files[0]
               if (!file) return
               const reader = new FileReader()
-              reader.onload = () => actions.importData(String(reader.result))
+              reader.onload = () => {
+                const karsilastirma = actions.prepareImport(String(reader.result))
+                if (karsilastirma) setPendingImport(karsilastirma)
+              }
               reader.readAsText(file)
               e.target.value = ''
             }}
           />
         </div>
+
+        {pendingImport && (
+          <>
+            <div className="divider" />
+            <div
+              className={pendingImport.dahaEski || pendingImport.gerileme ? 'rules' : 'hint-box'}
+              style={{ marginBottom: 14 }}
+            >
+              {(pendingImport.dahaEski || pendingImport.gerileme) && (
+                <div className="rules-title">
+                  <Icon name="alert" size={15} />
+                  Bu dosya elindekinden geride
+                </div>
+              )}
+              <p style={{ fontSize: 13.5, margin: 0 }}>
+                {pendingImport.bosMu
+                  ? 'Bu dosyada aktif proje yok. İçe aktarırsan mevcut projen silinir.'
+                  : pendingImport.dahaEski || pendingImport.gerileme
+                    ? 'İçe aktarırsan aşağıdaki farklar kaybolur. İki bilgisayar ' +
+                      'arasında dosya taşıyorsan yanlış yönde taşıyor olabilirsin.'
+                    : 'Bu dosya elindekinden ileride görünüyor. İçe aktarma ' +
+                      'mevcut verinin tamamının yerine geçer.'}
+              </p>
+            </div>
+
+            <div style={{ overflowX: 'auto' }}>
+              <table className="compare-table">
+                <thead>
+                  <tr>
+                    <th>Alan</th>
+                    <th>Şu an burada</th>
+                    <th>Dosyada</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ['Proje', 'projeAdi'],
+                    ['Faz', 'faz'],
+                    ['Tamamlanan adım', 'adim'],
+                    ['Kayıtlı oturum', 'oturum'],
+                    ['Kaydedilen dakika', 'dakika'],
+                    ['İçerik bileşeni', 'bilesen'],
+                    ['Arşivdeki proje', 'arsiv'],
+                  ].map(([etiket, anahtar]) => {
+                    const a = pendingImport.mevcut[anahtar]
+                    const b = pendingImport.yeni[anahtar]
+                    const farkli = String(a) !== String(b)
+                    return (
+                      <tr key={anahtar}>
+                        <td>{etiket}</td>
+                        <td>{a === null || a === undefined ? '-' : String(a)}</td>
+                        <td style={farkli ? { fontWeight: 700 } : undefined}>
+                          {b === null || b === undefined ? '-' : String(b)}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                  <tr>
+                    <td>Son değişiklik</td>
+                    <td>
+                      {pendingImport.mevcut.tarih
+                        ? new Date(pendingImport.mevcut.tarih).toLocaleString('tr-TR')
+                        : 'bilinmiyor'}
+                    </td>
+                    <td>
+                      {pendingImport.yeni.tarih
+                        ? new Date(pendingImport.yeni.tarih).toLocaleString('tr-TR')
+                        : 'bilinmiyor'}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div className="btn-row" style={{ marginTop: 14 }}>
+              <button
+                className={
+                  'btn btn-sm ' +
+                  (pendingImport.dahaEski || pendingImport.gerileme
+                    ? 'btn-danger'
+                    : 'btn-primary')
+                }
+                onClick={() => {
+                  actions.applyImport(pendingImport.gelen)
+                  setPendingImport(null)
+                }}
+              >
+                {pendingImport.dahaEski || pendingImport.gerileme
+                  ? 'Yine de üstüne yaz'
+                  : 'İçe aktar'}
+              </button>
+              <button className="btn btn-sm btn-ghost" onClick={() => setPendingImport(null)}>
+                Vazgeç
+              </button>
+              <button className="btn btn-sm" onClick={actions.exportData}>
+                <Icon name="download" size={15} />
+                Önce mevcudu yedekle
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       {archive.length > 0 && (

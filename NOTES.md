@@ -1,5 +1,734 @@
 # Proje Panosu: Durum Notu
 
+## Yapılacak: temaya göre form bileşenleri (henüz yapılmadı)
+
+Kullanıcının 28 Ağustos 2026'da istediği, **sonraya bırakılan** iş. O gün
+sadece hizalama ve sol panel düzenlemesi yapıldı, bileşenlerin kendisi
+yazılmadı.
+
+Kaydırma çubuğu bu listeden çıkarıldı: v3.1'de yapıldı. Sebebi, diğer
+maddelerden farklı olarak hiçbir bedeli olmaması: saf CSS, klavye ve
+ekran okuyucu davranışına dokunmuyor.
+
+Şu an tarayıcının yerel form bileşenleri kullanılıyor ve bunlar temanın
+dışında kalıyor:
+
+- **Tarih seçici** (`input type="month"` ve `type="date"`). Karanlık temada
+  takvim ikonu ve açılan panel işletim sisteminin renklerinde geliyor.
+- **Açılır liste** (`select`). Ok işareti ve açılan liste tarayıcının.
+- **Sayı kutusu** (`input type="number"`). Yukarı aşağı okları tarayıcının,
+  karanlık temada zor görülüyor.
+- **Onay kutusu** (`input type="checkbox"`). Kapı ekranında ve içerik
+  listesinde kullanılıyor.
+
+İstenen: bunların temaya uyan kendi sürümlerini yazmak.
+
+**Dikkat edilecek:** yerel bileşenleri değiştirmenin bir bedeli var ve
+`KURALLAR.md` içindeki basitlik kuralıyla gerilim yaratıyor. Yerel bir
+`select` klavyeyle gezilebilir, ekran okuyucu tanır, mobilde işletim
+sisteminin kendi seçicisini açar. Kendi yazdığın bir açılır liste bunların
+hepsini elle yapmak zorundadır. Görsel tutarlılık için erişilebilirlik
+kaybetmek iyi bir takas değil.
+
+Önerilen sıra: önce en çok göze batanlar (sayı kutusu okları ve açılır
+liste oku, çünkü bunlar sadece CSS ile büyük ölçüde düzelir), tarih seçici
+en sona (en zoru ve en çok kaybettireni).
+
+---
+
+## Ne yapıldı (v3.1: panel düğmesi ve kaydırma çubukları)
+
+### Daralt düğmesi marka satırına taşındı, markanın kendisi olmadı
+
+Kullanıcı sordu: düğmeyi ayrı tutmak yerine sol üstteki oyun ikonuna
+basınca açılıp kapanması daha mı iyi olur?
+
+**Olmaz, ve sebebi dar modda ortaya çıkıyor.** Bir logoya basmanın
+gezinme panelini kapatması beklenen bir davranış değildir ve hiçbir şey
+o ikonun tıklanabilir olduğunu göstermez. Panel darken, açma yolu
+görünmezse kullanıcı okunmayan bir panelle baş başa kalır ve geri dönüş
+yolu yoktur. `KURALLAR.md`: kullanıcıya soru işareti bırakılmaz.
+
+Ama kullanıcının asıl derdi haklıydı: ayrı bir satır dikey yer yiyordu.
+Orta yol uygulandı: düğme marka satırının sağ ucuna alındı, ayrı satır
+kalktı. İkon da düzeltildi; önceki `layers`/`list` ikonları "daralt"
+anlamı taşımıyordu, yerine `chevronLeft`/`chevronRight` kondu. Dar modda
+marka ikonunun altına iniyor, 28x28 piksel, her zaman görünür.
+`aria-expanded` durumu da yansıtıyor.
+
+### Kaydırma çubukları temaya bağlandı
+
+Yerel kaydırma çubuğu işletim sisteminin renklerinde geliyordu ve
+karanlık temada sayfanın kenarında açık gri bir şerit olarak duruyordu.
+Renkler artık CSS değişkenlerinden alınıyor (`--border-strong`), tema
+anahtarıyla birlikte değişiyor. Doğrulandı: karanlık temada
+`rgb(77, 73, 68)`, aydınlıkta `rgb(206, 200, 186)`.
+
+Genişlik inceltildi ama **yok edilmedi**: görünmeyen bir kaydırma
+çubuğu, sayfanın devamı olduğunu gizler. Tutamak saydam çerçeveyle
+inceltildi, böylece görsel olarak ince ama tıklama alanı geniş kaldı.
+
+Doğrulandı: geniş modda düğme marka satırında ve sağa yaslı (sağ kenar
+225 piksel, panel 250 piksel, ikonla aynı satırda), dar modda ikonun
+altında ve ekran içinde. Sıfır JavaScript hatası.
+
+## Ne yapıldı (v3.0: içerik zinciri ve arayüz düzeni)
+
+Kullanıcının ekrandan bildirdiği ve istediği üç iş.
+
+### Bütçe ekranındaki hizalama hatası
+
+Mağaza kayıt ücreti satırındaki iki alan hizasızdı: ilkinin etiketi yoktu,
+bu yüzden ikinci alan aşağı kayıyordu. v2.6'da eklerken atlanmış. İlk alana
+"Tutar (USD)" etiketi verildi, iki input artık aynı hizada.
+
+### Ganimet zinciri: düşman > eşya > üretim
+
+Kullanıcının tarifi: bir düşmandan düşen ganimet kaynak/eşya tarafına
+gelmeli, "nereden elde edilir" o düşman olmalı, "ne işe yarar" da
+üretilebilir eşyaların malzemesi olabilmeli (örümcek ağı gibi zincirler).
+
+**Bağlar türetiliyor, saklanmıyor.** Aynı bilgiyi iki yerde tutmak, iki
+yerin ayrışması demek: düşmanın "ne düşürür" alanı ile eşyanın "nereden
+düşer" alanı ayrı ayrı tutulsaydı biri değişince diğeri yanlış kalırdı.
+Tek kaynak düşmanın alanı; eşyanın tarafı `itemRelations` ile hesaplanıyor.
+
+Her bileşenin altında artık dört bağ görünüyor:
+
+- Şunlardan düşüyor (hangi düşmanlar bu eşyayı düşürüyor)
+- Şunların üretiminde kullanılıyor (bu eşya neyin malzemesi)
+- Malzemeleri (bu eşya neyden üretiliyor)
+- Düşürdükleri (bu düşman ne düşürüyor)
+
+Tanımsız olanlar uyarı renginde ve "(tanımsız)" etiketiyle gösteriliyor.
+
+`kaynak` türüne **"Neyden üretilir"** alanı eklendi. "Nereden elde edilir"
+alanı ise **"Düşman dışı elde etme yolu"** olarak yeniden adlandırıldı,
+çünkü düşman tarafı zaten türetiliyor; burası sandık, dükkan ve görev
+ödülü için.
+
+### Tek tıkla eksik eşya ekleme
+
+Gerçek bir veri setinde "4 ganimet listede tanımlı değil" uyarısı
+çıkıyordu ama uyarıyı görüp elle eklemek gerekiyordu. Artık hem İçerik
+listesinin başında hem tutarlılık bulgusunun içinde "hepsini ekle" düğmesi
+var. Doğrulandı: dört ganimet tek tıkla eklendi, bileşen sayısı 7'den
+11'e çıktı, uyarı kalktı.
+
+(Oyun içeriğinin kendisi bu dosyaya yazılmıyor. Repo public ve tasarım
+ayrıntıları `KARARLAR.md` içinde, repo dışında tutuluyor.)
+
+"Hiçbir şeyden düşmüyor" kontrolü de düzeltildi: artık üç elde etme yolunu
+birden sayıyor (düşmandan düşmek, üretilmek, düşman dışı yol). Önceden
+sadece düşme yoluna bakıyordu ve üretilen bir eşyayı ulaşılamaz sanıyordu.
+
+### Sol panel daraltılabilir
+
+Panel 250 pikselden 68 piksele iniyor. Metinler **gizleniyor, kırpılmıyor**:
+kırpılmış bir yazı ("Bütçe ve Geri D...") okunmaz bir yazıdır ve taşan
+yazıdan daha iyi değildir. İkonlar kalıyor, tam ad `title` olarak veriliyor.
+Grup başlıkları gizlenince yerine ayırıcı çizgi geliyor. Tercih
+`localStorage`'da saklanıyor.
+
+### Doğrulama ve bir ders
+
+Tarayıcıda gerçek Mytherra verisiyle: panel 749 pikselden 68 piksele
+iniyor, dar modda 0 yazı görünüyor ve 11 ikon duruyor, tercih yenilemeden
+sonra kalıyor, dar modda hiçbir ekranda yatay taşma yok. Ganimet zincirinin
+dört bağı da doğru hesaplanıyor. Bütçe ekranındaki iki input aynı hizada
+(ikisi de 1188 piksel). Temiz yüklemede sıfır JavaScript hatası.
+
+**Ders:** İçerik ekranı bir ara tamamen patladı (`eksikOgeler is not
+defined`, eksik import) ve bunu ne `lint` ne de `build` yakaladı. İkisi de
+temiz geçti. Sadece tarayıcı testi yakaladı. Bu projede arayüz testi yok;
+tarayıcıdan geçirmeden "çalışıyor" denmemeli.
+
+## İleride: ekip modu ve sunucu tarafı (henüz yapılmadı)
+
+Kullanıcının 28 Ağustos 2026'da not edilmesini istediği yön. **Şimdi
+yapılmayacak**, ama yapılırsa aracın türünü değiştirir: kişisel bir
+planlama aracından çok kişili bir üretim aracına geçer.
+
+### İstenen
+
+- **Davet kodu ve oda.** Ekibi olan biri davet kodu üretir, ekip üyeleri
+  kodla odaya girer. Bir host var ve ayarları o belirler.
+- **Kronometre zorunluluğu.** Günlük girdi kronometreyle yapılır, böylece
+  gün içinde kimin ne kadar çalıştığı ölçülür.
+- **Emeğin ölçülmesi ve pay adaleti.** Kim işine ne kadar değer veriyor
+  görünür olur; iş bitince pay bölüşümü ölçülen emeğe dayanır. Tek kişilik
+  projede zaten sorun yok, bu tamamen ekipli durum için.
+- **Ortak alanlar.** Üretim panosu, giriş çıkış kayıtları ve host ile
+  etkileşilen diğer alanlar paylaşılır.
+- **Domain ve web sürümü.** Araç bir alan adı üstünden yayına alınır.
+- **Kimlik doğrulama.** Google ile giriş veya siteye ait kayıt/giriş.
+  Kullanıcı üyelik akışından henüz emin değil.
+- **Veri tabanı.** NeonDB düşünülüyor, kullanıcının daha önce deneyimi var.
+
+### Bunun ne anlama geldiği (karar verilmeden önce okunmalı)
+
+Bu liste tek başına bir özellik seti değil, **mimari değişikliği**. Bugünkü
+pano arka ucu olmayan tek bir sayfa: veri tarayıcıda, hesap yok, sunucu
+yok, çalışması için internet gerekmiyor. Yukarıdaki maddelerin her biri bu
+üç şeyi de bozuyor.
+
+Yani karar "bu özellikleri ekleyelim mi" değil, **"bu araç kişisel bir
+araç mı kalacak, yoksa çok kişili bir servise mi dönüşecek"**. İkisi de
+meşru ama aynı anda ikisi olmaz.
+
+Bir orta yol var: bugünkü tek dosya panosu tek kişilik sürüm olarak kalır,
+ekip sürümü ayrı bir kurulum olur. Ortak olan şey `src/data/` altındaki
+bilgi tabanı ve `src/lib/` altındaki hesap motoru; bunlar zaten arayüzden
+ve depolamadan ayrı yazıldı, o yüzden taşınabilirler.
+
+### Dikkat edilecek üç şey
+
+- **Ölçülen emek hassas bir konu.** Kronometre verisi pay bölüşümüne
+  girdiği anda, sayı sadece bilgi olmaktan çıkıp para olur. İnsanlar
+  ölçülen şeyi optimize eder: kronometreyi açık bırakmak, düşünme süresini
+  kaydetmemek, gece çalışmasını yazmamak. Sistem bu sayıyı tek gerçek
+  olarak sunarsa haksızlık üretir. Aracın kendi ton kuralı burada da
+  geçerli: sayıyı göster, ama ne olduğunu ve neyi ölçmediğini de yaz.
+- **Hesap ve veri tabanı, "dış servisler isteğe bağlıdır" kuralını
+  doğrudan çiğniyor.** Ekip sürümünde bu kaçınılmaz, ama tek kişilik
+  sürümün ondan etkilenmemesi gerekir.
+- **Kimlik doğrulama ve veri tabanı, bu serinin diğer projelerinden çok
+  daha büyük bir iş.** Kendi kendine bir 30 günlük proje olabilir.
+
+### Bu araca sorulacak soru
+
+Bu panonun kendi mantığıyla değerlendirilmeli: ekip modu bir kapsam
+kalemidir. Sihirbaza "ekip" girildiğinde saat çarpanı zaten düşüyor
+(iki kişi 0.65), ama panonun KENDİSİNİ çok kişili yapmak ayrı bir proje.
+Kapsam ekranındaki buzdolabına yazılacak fikir tam olarak budur.
+
+## Ne yapıldı (v2.9: dışarıdaki asistanla dosya üstünden çalışma)
+
+Kullanıcının fikri: oyun geliştirme kişisel bilgisayarda Claude Code ile
+yapılacak, pano iş bilgisayarında duracak. İki seçenek düşünüldü: panoya
+Claude API bağlamak, veya dosya üstünden gidip gelmek.
+
+**Dosya seçildi. API dört sebeple reddedildi:**
+
+1. `KURALLAR.md`: kişisel bir planlama aracı bir API'ye bağımlı olamaz.
+   API giriş yolu olursa internet yokken sisteme giriş yapılamaz.
+2. Pano arka ucu olmayan tek bir dosya. API anahtarı `localStorage`'da
+   iş bilgisayarında durur ve `pano.html` içinde seyahat eder. Dosyayı
+   alan anahtarı da alır.
+3. **API asıl sorunu zaten çözmüyor.** İki makine birbirine bağlı değil;
+   bir API çağrısı iki ayrı `localStorage` arasında veri taşımıyor. Her
+   hâlükârda bir dosya gerekiyor.
+4. Dosya yolu zaten büyük ölçüde kuruluydu: dışa/içe aktarma, içerik
+   föyü ve güvenli karşılaştırmalı içe aktarma vardı.
+
+### İki yönlü protokol (`src/lib/rapor.js`)
+
+**Pano -> asistan: durum föyü.** Hangi fazdasın, o fazın SERT KURALLARI,
+sıradaki tek iş (adım kimliğiyle), teslimat durumu, kapsam listeleri,
+riskler, içerik veri tabanı ve tutarlılık notları. Sonunda geri
+yazılacak rapor biçiminin tarifi ve kuralları.
+
+**Asistan -> pano: iş raporu.** JSON. Oturumlar ve dakikalar, tamamlanan
+adımlar ve teslimatlar, eklenen/güncellenen içerik, günlük notları,
+bulunan hatalar.
+
+Günlük ekranından kullanılıyor: föyü indir veya kopyala, iş raporunu al.
+
+### Sınır: rapor kapıya dokunamaz
+
+Kullanıcıya soruldu, kararı bu oldu. Rapor kapı kontrollerine, kapsama ve
+tahmin eksenlerine dokunamaz.
+
+Sebebi: kapı kontrollerinin bir kısmı kullanıcının kendi beyanı ("10
+dakika oynadın ve durmak istemedin"). Bir asistanın bunları
+işaretleyebilmesi aracın var oluş sebebini bitirirdi. Otomatik kontroller
+zaten veriden hesaplanıyor, onlara zaten dokunmaya gerek yok.
+
+Rapor bu alanlara dokunmaya çalışırsa sessizce yok sayılmıyor: arayüzde
+"Rapor şu alanlara dokunmaya çalışmış" diye açıkça yazılıyor.
+
+### Rapor doğrudan uygulanmıyor
+
+Önce fark gösteriliyor, kullanıcı onaylıyor. Uygulanamayan her madde
+sebebiyle birlikte listeleniyor: olmayan adım kimliği, bilinmeyen içerik
+türü, zaten var olan ad, o türde olmayan alan, dakikası sıfır oturum.
+Sessizce atmak, asistanın yaptığını sandığı bir işin kaydedilmemesi
+demek olurdu.
+
+Doğrulandı (tarayıcı, uçtan uca): 90 dakikalık bir oturum, 2 adım, 1
+içerik bileşeni, 1 not ve 1 hata uygulandı; geçersiz adım kimliği
+sebebiyle atlandı; `gateChecks` alanı reddedildi ve kullanıcıya bildirildi;
+uygulama sonrası `gateChecks` boş kaldı. Sıfır JavaScript hatası.
+
+## Ne yapıldı (v2.8: iki bilgisayar gerçeği)
+
+Kullanıcı Unity'yi iş bilgisayarına kuramıyor. Planlama burada, oyun
+geliştirme kişisel bilgisayarda olacak. Bu, önceki plandaki öncelikleri
+değiştirdi ve iki iş çıkardı.
+
+### Tek dosyaya gömülen pano
+
+`dist` klasörünü taşıyıp `index.html` açmak çalışmıyor: tarayıcılar
+`file://` üstünden ES modülü yüklemeyi CORS gereği engelliyor. Sayfa
+bomboş açılıyor ve hata bile vermiyor. Test edildi, doğrulandı.
+
+Ama SATIR İÇİ modül betikleri `file://` üstünde çalışıyor. `scripts/tek-dosya.mjs`
+CSS ve JS'i index.html içine gömüp tek bir `pano.html` üretiyor
+(`npm run tek-dosya`). 412 KB, tek dosya, çift tıklanarak açılıyor,
+Node veya sunucu gerektirmiyor.
+
+Tarayıcıda doğrulandı: on bir ekranın hepsi açılıyor, localStorage
+çalışıyor, yazı tipleri yükleniyor, sihirbaz taslağı yazılıyor, sıfır
+JavaScript hatası. `vite.config.js` içine `base: './'` eklendi.
+
+İkinci faydası: bu bilgisayardaki araçlar 30 gün sonunda kaldırılacak.
+Derlenmiş pano o zaman da çalışmaya devam eder.
+
+Sınır: `file://` kaynağı ile `localhost` kaynağı ayrıdır, localStorage
+paylaşılmaz. Dosya taşımak veriyi taşımaz; veri için JSON dışa/içe
+aktarma kullanılır.
+
+### İçe aktarma artık üstüne yazmadan önce soruyor
+
+Bu, iki bilgisayar durumunun ortaya çıkardığı asıl risk ve gerçek bir
+hataydı. `importData` hiçbir şey sormadan tüm verinin üstüne yazıyor ve
+yeşil bir "Veriler içe aktarıldı" bildirimi gösteriyordu. Dosya taşıyan
+biri için bu, eski bir dosyayla yeni işini silmek demekti. Bu projede bir
+kez gerçek veri kaybı yaşandı (sihirbaz taslağı); aynı hatanın ikinci
+biçimi burasıydı ve henüz kimseyi vurmadan bulundu.
+
+Artık iki adımlı: dosya seçilince önce karşılaştırma tablosu çıkıyor.
+Proje adı, faz, tamamlanan adım, kayıtlı oturum, kaydedilen dakika,
+içerik bileşeni, arşiv ve son değişiklik tarihi yan yana gösteriliyor.
+
+Gelen dosya geride kalıyorsa (tarih daha eski VEYA herhangi bir sayaç
+geriliyorsa) uyarı çıkıyor ve düğme "Yine de üstüne yaz" olarak, tehlike
+renginde görünüyor. Yanında "Önce mevcudu yedekle" düğmesi var.
+
+`saveStore` artık her kayıtta `sonDegisiklik` damgası atıyor; tarih
+damgası olmayan eski dosyalar için sayaç karşılaştırması yedek kontrol.
+
+Doğrulandı: 8 oturum / 12 adım / 6 bileşen olan bir veri üstüne 2/3/1
+olan eski bir dosya aktarılmaya çalışıldı, uyarı çıktı, onaylanmadan
+hiçbir şey değişmedi, vazgeçince veri aynı kaldı.
+
+## Geliştirme planı (28 Ağustos 2026)
+
+Sistemin bugünkü hali: faz-kapı disiplini, dokuz eksenli saat tahmini,
+tempo gerçekliği, para ve geri dönüş, kapsam koruması, içerik veri tabanı
+ve dışa aktarma. Planlama tarafı büyük ölçüde tamam.
+
+**Yapısal boşluk şu: sistem planlarken gerçeği söylüyor, çalışırken
+susuyor.** Kullanıcı çalışmaya başladıktan sonra sistem hiçbir şey
+ölçmüyor ve kendi tahminini hiç sınamıyor. Aşağıdaki sıralama buna göre
+kuruldu.
+
+### 1. Kalibrasyon: sistem kendi tahminini sınasın
+
+`project.sessions` zaten kaydediliyor ama hiçbir yerde tahminle
+karşılaştırılmıyor. Faz başına "tahmin edilen saat" ile "gerçekten
+harcanan saat" yan yana konursa, kullanıcının kendi sapma katsayısı
+çıkar. Bu katsayı sonraki tahminlere uygulanabilir.
+
+Bunun neden en önemli madde olduğu: bu dosyadaki bütün çarpanlar bir
+kabul. `estimate.js` içinde zaten yazıyor: "ölçülen gerçek, tahminden
+daha güvenilirdir." `unitMath` bunu birim düzeyinde yapıyor, faz ve proje
+düzeyinde yapmıyor. Kalibrasyon, aracı "varsayımlar kitabı" olmaktan
+çıkarıp "senin hızını öğrenen araç" haline getirir.
+
+Orta büyüklükte iş. Post-mortem fazındaki elle karşılaştırma teslimatı
+da bununla otomatikleşir.
+
+### 2. Yanma grafiği ve haftalık özet: geç kalmayı erken söyle
+
+Elimizde tarih, gereken saat ve kaydedilmiş oturumlar var. Eksik olan,
+bunları birleştirip "bu tempoyla bitiş tarihin şu kadar kayıyor" demek.
+
+Sistem şu an sadece kurulum anında sert. Bir ay sonra iki hafta ara
+verilmişse hiçbir şey söylemiyor. Oysa aracın var oluş sebebi tam olarak
+bunu altı ay sonra değil bugün söylemek.
+
+Küçük ile orta arası iş. "Bu hafta 5 saat gerekiyordu, 2 saat çalıştın,
+bu gidişle hedef tarih 3 ay kayar" cümlesi kurulabilir.
+
+### 3. Veri güvenliği: yedek hatırlatması
+
+Bütün veri tek tarayıcının `localStorage`'ında. Dışa aktarma var ama
+otomatik yedekleme ve hatırlatma yok. Bu projede bir kez gerçek veri
+kaybı yaşandı (sihirbaz taslağı) ve düzeltildi, ama asıl proje verisi
+hâlâ aynı kırılganlıkta duruyor.
+
+Ek bir sebep: bu bilgisayardaki geliştirme araçları 30 gün sonunda
+kaldırılacak. Yüzlerce saatlik planlama tek bir tarayıcı profilinde
+durmamalı.
+
+Küçük iş: "son yedek N gün önce alındı" göstergesi ve belli bir süre
+geçince uyarı. Otomatik indirme değil, hatırlatma.
+
+### 4. İçerik listesi ile üretim panosu arasında köprü
+
+İçerik bileşenleri asıl işin kendisi. Üretim panosundaki kartlar elle
+giriliyor. Bileşenleri karta çevirmek panoyu gerçek yapar ve iki listeyi
+elle eşlemek zorunluluğunu kaldırır.
+
+Orta büyüklükte iş, 1 ve 2'ye bağımlı değil.
+
+### 5. Tür başına ölçülen saat
+
+Kullanıcı bir boss yaptıktan sonra "bu türden biri kaç saat sürdü"
+girerse, birim matematiği düz sayım olmaktan çıkıp tür ağırlıklı hale
+gelir. Bir boss ile bir kaynak aynı birim değil.
+
+1. maddeyle aynı felsefe, ona bağlanabilir. Küçük iş.
+
+### Yapılmayacaklar
+
+- **Yapay zeka ile hissiyat testi.** Sistemin kendi mantığına aykırı.
+- **İçerik üreteci.** Tek bölgelik bir ilk sürümde saf zarar. Veri
+  katmanı kuruldu, üreteç isteyene işin yarısı hazır.
+- **Mağaza ücretleri için API.** Yayınlayan yok. Kur için API zaten bağlı.
+
+### Sıralama önerisi
+
+3 (küçük, veri güvenliği), sonra 2 (erken uyarı), sonra 1 (kalibrasyon).
+4 ve 5 sonraya. Ama bundan önce gelen bir şey var, aşağıya bakın.
+
+### Panonun kendisi hakkında dürüst not
+
+Bu araç bir buçuk günde v1'den v2.7'ye geldi ve artık on binlerce satırlık
+bir yazılım. Aynı sürede Mytherra hâlâ Faz 0: Konsept'te ve tek bir
+teslimat tamamlanmadı.
+
+Bu, aracın önlemek için yazıldığı kalıbın ta kendisi: oyunu yapmak yerine
+oyunu yapmaya yarayan şeyi yapmak. İç araç tartışmasında aynı uyarı
+oyunun kendisi için yapılmıştı, panonun kendisi için de geçerli.
+
+Öneri: yukarıdaki maddelere geçmeden önce panoyu bir hafta boyunca
+gerçekten kullan. Faz 0 teslimatlarını doldur, oturum kaydet, kapıyı
+zorla. Eksikler o zaman kendiliğinden görünür ve tahmin edilerek değil
+kullanılarak bulunur. Bu maddelerin hangisinin gerçekten gerektiğini de
+o hafta söyler.
+
+## Ne yapıldı (v2.7: kendi kodumun gözden geçirilmesi)
+
+v2.4-v2.6 arasında yaklaşık bin satır hızlı yazıldı. Bütün türleri,
+ölçekleri, platformları ve kullanıcı durumlarını dolaşan bir duman testi
+yazılıp çalıştırıldı. Yapısal hata çıkmadı ama üç gerçek hata bulundu ve
+üçü de düzeltildi.
+
+### 1. Mağaza ücreti mağazadan bağımsız saklanıyordu
+
+`profile.storeFee` tek bir alandı. App Store için ücret girip mağazayı
+Steam'e çevirince, Steam de o tutarı kullanıyordu: yanlış mağazanın
+sayısıyla hesap yapmak. Artık `storeFees` ve `storeFeeCheckedAt` mağaza
+başına anahtarlanıyor.
+
+### 2. Tür değişince içerik bileşenleri sessizce kayboluyordu
+
+Ayarlar'dan tür değiştirilince eski türün bileşenleri kayıtta kalıyor ama
+hiçbir bölümde görünmüyordu. Üstelik toplam sayıma dahil oluyorlardı, yani
+"14 bileşen" yazıyor ama ekranda 12 tane görünüyordu. Birim sayımını
+tekrar tahmine çeviren bir durum.
+
+Düzeltme: `orphanItems` ve `validItems` ayrıldı. Sayım, ilerleme ve dışa
+aktarma sadece geçerli bileşenleri kullanıyor. Eşleşmeyenler İçerik
+ekranının altında ayrı bir kartta, eski tür koduyla birlikte listeleniyor
+ve tutarlılık kontrollerinde en üstte uyarı olarak çıkıyor. Silinmiyorlar:
+tür geri değiştirilirse olduğu gibi geri geliyorlar. Veriyi göstermeden
+saymak da, sormadan silmek de yanlış olurdu.
+
+### 3. Hazır varlık ile görsel araç kazancı çift sayılıyordu
+
+`aiEffect` içindeki örtüşme kırpması sadece `minimal` sanat yaklaşımında
+uygulanıyordu. "Hazır varlık kullanacağım" diyen biri görsel üretim
+aracının kazancının tamamını alıyordu, oysa ikisi aynı sorunu çözüyor:
+sanatı kendin üretmemek. Hazır varlıkla çalışırken işin çoğu üretmek değil
+seçmek, uyarlamak ve tutarlı tutmaktır; bir üreteç bunların sadece birine
+yardım eder.
+
+Düzeltme: `ART_TOOL_OVERLAP` tablosu (`options.js`). Minimal 0.50, hazır
+0.65, kendi 1.00. Sanat yaklaşımı arttıkça aracın kazancı da artıyor,
+sıralama artık doğru: minimal %4, hazır %5, kendi %7.
+
+### Doğrulama
+
+Duman testi: dokuz tür x dört ölçek x üç platform x üç kullanıcı durumu
+(324 birleşim) için hesap patlamıyor, `required` pozitif ve sonlu, karar
+ve kaldıraçlar eksiksiz. Dokuz türün içerik şeması tutarlı: tekrarlı tür
+veya alan yok, her türün test föyü var, bütün `ref` alanları var olan bir
+türe işaret ediyor. Boş projede kontroller ve dışa aktarma patlamıyor.
+
+Tarayıcıda: eşleşmeyen bileşen kartı çıkıyor ve eski tür kodlarını
+gösteriyor, toplam sayım 4 değil 2, tutarlılık listesinde en üstte uyarı
+var, mobil platformda App Store varsayılan geliyor ve ücret alanı "sisteme
+yazılmadı" açıklamasıyla çıkıyor, Steam'de "sistemin son bildiği tutar 100
+USD ve bu bilgi 2026-05 tarihine ait" yazıyor. Sıfır JavaScript hatası,
+`lint` ve `build` temiz.
+
+## Ne yapıldı (v2.6: içerik veri tabanı, mağaza ücretlerinde tarih)
+
+İki iş: kullanıcının önerdiği içerik veri tabanı (2, 3, 4 ve 5. maddeler
+birlikte) ve yazılı mağaza ücretlerinin eskiyebileceğinin kabul edilmesi.
+
+### Mağaza ücretleri artık tarihli
+
+`publishing.js` başındaki iki gruplu ayrıma bir üçüncü durum eklendi:
+**birinci gruptaki sayılar da eskir.** Steam'in kayıt ücreti bugün doğru
+olabilir, iki yıl sonra olmayabilir. Yazılı her tutarın yanına artık
+bilindiği tarih konuyor (`FEE_KNOWN_AS_OF`, `feeKnownAsOf`) ve arayüz
+"sistemin son bildiği tutar bu, doğrula" diyor.
+
+`money.js` içindeki `storeFeeInfo` üç durumu ayırt ediyor: kullanıcı
+girmiş (en güvenilir, kontrol tarihiyle), sisteme yazılı (tarihiyle
+birlikte gösterilir), hiçbiri (sıfır kabul edilir ve maliyetin eksik
+olduğu söylenir). 12 aydan eski tutarlar için ayrıca uyarı çıkıyor.
+
+Kullanıcının sorduğu API konusu: bu tutarlar için bağlanabilecek bir uç
+yok. Ne Valve, ne Apple, ne Google kayıt ücretlerini programatik olarak
+yayınlıyor. Döviz kuru için API var ve zaten bağlı (`rates.js`).
+Ücretler için tek dürüst yol kullanıcının kontrol edip girmesi, o yüzden
+kontrol tarihi de saklanıyor.
+
+### İçerik veri tabanı
+
+`src/data/content.js`, `src/lib/content.js`, `src/components/ContentView.jsx`.
+
+Dokuz türün hepsi için bileşen şeması yazıldı (5. madde de bu sürümde
+bitti). Kalıp her türde aynı: bir **kapsayıcı** (RPG'de bölge, platformda
+bölüm, anlatıda sahne, roguelike'ta oda) ve içine bağlanan bileşenler.
+RPG'de bölge, boss, küçük düşman, dost, kaynak ve yetenek var; her birinin
+alanları (can, kuvvet, ne düşürür, hangi bölgede) ve sabit test föyü var.
+
+**Alan değerleri için varsayılan verilmiyor.** Can ve kuvvet oyunun
+dengesine ait kararlardır, sistemin bilebileceği şeyler değil. Sistem
+sadece hangi alanların doldurulması gerektiğini söyler.
+
+**Bu bir üreteç değil, liste.** Bölge üreteci yazmak tek bölgelik bir ilk
+sürümde saf zarardır: araç yapım saati, birim başına kazançtan büyüktür.
+Veri katmanını kurmak ise neredeyse bedava ve üreteci sonradan yazmak
+isteyene işin yarısını hazır verir.
+
+### Asıl kazanç: plannedUnits artık sayım
+
+Üretim kapısındaki birim matematiği (`unitMath`) şu ana kadar kullanıcının
+verdiği bir tahmine güveniyordu. Artık içerik listesi doluysa Bu Faz
+ekranında "İçerik ekranında 14 bileşen girilmiş, bu sayı tahmin değil"
+notu ve tek tıkla alanı doldurma düğmesi çıkıyor.
+
+### Test tavsiyesi konusu: iki tür, ikisi de zekâ gerektirmiyor
+
+Kullanıcı testi geliştiricinin yapacağını netleştirdi ve sistemin ne
+kadar akıllı tavsiye verebileceğini sordu. Cevap: "akıllı" olmaya
+çalışırsa genel geçer laf üretip vakit harcatır. Güvenilir biçimde
+verebileceği iki şey var:
+
+1. **Veri tutarlılığı kontrolleri** (`contentChecks`). Hepsi hesaplanır.
+   Aynı sayısal değeri paylaşan bileşenler, kapsayıcıya bağlanmamış
+   içerik, boş kapsayıcılar, dağılım dengesizliği, tanımsız ganimet,
+   hiçbir yerden düşmeyen eşya, isim tekrarı, boş tür. `gates.js`
+   içindeki otomatik kontrollerle aynı kalıp: sistem doğrulayabildiğini
+   doğrular. Hiçbiri "şunu yap" demiyor, "şu durum var, kasıtlı mı" diyor.
+2. **Bileşen türüne göre sabit test föyü.** Zeki değil, alan bilgisi.
+   Bir kez yazılır, her seferinde aynıdır: "boss öldüğünde ganimet
+   gerçekten düşüyor mu", "iki düşman aynı anda saldırınca ne oluyor".
+   `genres.js` içindeki tuzaklarla aynı kalıp.
+
+Kapsam dışı: yapay zeka ile hissiyat testi. Sistemin kendi mantığına
+aykırı, `karar` işkolu hiçbir asistandan etkilenmiyor.
+
+### Dışa aktarma
+
+İki biçim. **JSON** makine için: türler, alanlar, bileşenler ve
+referansların okunabilir adları. **Föy** (markdown) insan ve asistan için:
+içeriğin tamamı, tür başına test föyleri ve tutarlılık notları. Föyün
+başında ne İSTENDİĞİ de yazıyor: iskelet kod, tanım dosyaları, yükleme
+kodu; sayılar tasarım kararıdır ve asistanın onları "dengelemesi"
+istenmez. Kopyala ve indir düğmeleri var.
+
+### Türkçe ekler veriye yazıldı
+
+"hiçbir bölgee bağlı değil" hatası çıktı. Ünlüyle biten kelimeler
+kaynaştırma harfi ister ("bölge" > "bölgeye"), bazıları ünsüz
+yumuşamasına uğrar ("kaynak" > "kaynağa"). Morfoloji kodu yazmak yerine
+her kapsayıcı türe `lower` ve `dative` alanları eklendi. Bu bir algoritma
+değil, alan bilgisi ve `src/data/` altında durması doğru.
+
+### Doğrulama
+
+Tarayıcıda (Chrome, DevTools Protocol), kasıtlı olarak bozuk bir Mytherra
+veri seti kurularak: 13 bileşen, 11 tutarlılık bulgusunun hepsi doğru
+tetiklendi (aynı canlı iki boss, bölgesiz düşman, boş bölge, tanımsız
+ganimet, ulaşılamaz eşya, isim tekrarı, boş tür). Arayüzden bileşen
+ekleme çalışıyor ve localStorage'a yazılıyor (13 > 14). Detay alanları,
+bölge seçme listesi ve test föyleri açılıyor. Föy dışa aktarması doğru
+metni üretiyor. Aydınlık ve karanlık tema, 390px mobil (yatay taşma yok),
+sıfır JavaScript hatası, `lint` ve `build` temiz.
+
+Geriye dönük uyum: `content` alanı olmayan eski kayıtlar boş liste olarak
+okunuyor.
+
+### Kalan
+
+Kullanıcının listesindeki beş maddenin hepsi bitti. İleride konuşulabilecek
+şeyler: bileşen türüne göre ölçülen saat (kullanıcı bir boss yaptıktan
+sonra "bu türden biri kaç saat sürdü" girer, birim matematiği tür ağırlıklı
+hale gelir) ve içerik listesinin üretim panosuna kart olarak aktarılması.
+
+## Ne yapıldı (v2.5: hedef platform ekseni)
+
+Kullanıcının isteği: sistem oyunun mobile mi bilgisayara mı çıkacağını
+sormalı ve sunumu ona göre yapmalı. Kendisi bunu "aciliyeti en düşük" diye
+işaretlemişti, ama en ucuz ve tahmini gerçekten etkileyen madde olduğu için
+öne alındı.
+
+Platform, çok oyunculu ile aynı türden bir karar: sonradan eklenen bir
+özellik değil, kontrol şemasını, arayüz yerleşimini ve test sürecini baştan
+belirler. Mobil, "aynı oyunu küçük ekrana koymak" değildir.
+
+### Eklenenler
+
+- `PLATFORM_TARGETS` (`options.js`): bilgisayar 1.0, mobil 1.3, ikisi birden
+  1.6. Mobilin çarpanı dokunmatik kontrolün bir port değil yeniden tasarım
+  olmasından, ekran oranı ve cihaz performans aralığından, ve mağaza
+  inceleme sürecinden geliyor. "İkisi birden" 1.3 + 1.3 değil çünkü ortak
+  iş var, ama test matrisi ikiye katlanıyor.
+- Sihirbazın 5. adımında (koşullar) platform sorusu, çok oyunculunun hemen
+  ardında. Ayarlar ekranından sonradan değiştirilebiliyor.
+- Yeni kaldıraç: "Tek platformda çık: önce bilgisayar". Sadece iki platform
+  seçiliyken görünüyor, çok oyunculu kaldıracıyla aynı mantıkta.
+- `publishing.js` içine App Store ve Google Play eklendi. Bütçe ekranındaki
+  mağaza listesi artık platforma göre daralıyor: mobil bir projede Steam
+  seçenek olarak görünmüyor.
+
+### Mağaza ücretlerinde dosyanın kendi kuralı uygulandı
+
+Apple'ın geliştirici programı ücreti ve Google Play kayıt ücreti **koda
+yazılmadı**. Tutarlar zamanla ve ülkeye göre değiştiği için `publishing.js`
+başındaki ayrım gereği ikinci gruba giriyorlar: varsayılan sıfır, `verifyFee`
+işaretli, arayüzde "doğrula" etiketiyle kullanıcıdan isteniyor. Girilen değer
+`money.js` içindeki `storeFeeFor` ile mağazanın kendi değerini eziyor.
+
+Apple ücretinin YILLIK olduğu ayrıca yazıldı, çünkü proje uzadıkça tekrar
+eder ve bu, sistemin "maliyet süreye bağlıdır" ekseniyle doğrudan ilgili.
+
+### Yol boyunca bulunan tutarsızlık
+
+Platform mobil seçilse bile `createProject` mağazayı Steam olarak
+varsayıyordu. Sonuç: mobil bir proje, Steam'in yüzde 30 payı ve 100 dolarlık
+iade edilebilir ücretiyle hesaplanıyordu. Mağaza varsayılanı artık
+platformdan türetiliyor.
+
+Ayrıca proje kurulduktan sonra Ayarlar'dan platform değiştirilirse seçili
+mağaza geçersiz kalabiliyor. Bu durumda Bütçe ekranı sessizce eski oranlarla
+hesap yapmak yerine uyarı gösteriyor: "Seçili mağaza bu platformda yok,
+aşağıdaki hesap hâlâ Steam oranlarıyla yapılıyor ve bu platform için yanlış."
+
+### Doğrulama
+
+Tarayıcıda (Chrome, DevTools Protocol): sihirbazın 5. adımında üç seçenek
+görünüyor ve seçim taslağa yazılıyor; Bütçe ekranındaki mağaza listesi
+platforma göre daralıyor; mobilde "doğrula" etiketli ücret alanı çıkıyor;
+platform ile mağaza uyuşmadığında uyarı çıkıyor. Sıfır JavaScript hatası,
+`lint` ve `build` temiz.
+
+Geriye dönük uyum: `platformId` alanı olmayan eski kayıtlar `pc` varsayılanına
+düşüyor ve saat tahmini değişmiyor (çarpan 1.0).
+
+### Sırada ne var (içerik veri tabanı, konuşuldu)
+
+Kullanıcı bir oyun içeriği veri tabanı önerdi: bosslar, küçük düşmanlar,
+dostlar, kaynaklar, üs; can, kuvvet, düşen ganimet; bölge ilişkisi ve alt
+dallar. Parçalara bölündü ve 1. parça (platform) bu sürümde yapıldı.
+Kalanlar:
+
+2. Düz içerik listesi. Türe göre varsayılan bileşen türleri, kullanıcı sayı
+   ve isim girer. Asıl değeri: `unitMath` kapısındaki `plannedUnits` artık
+   tahmin değil sayım olur.
+3. Alan şeması (can, kuvvet, ganimet, bölge) ve alt dallar. Panonun üretim
+   disiplini aracından tasarım aracına kaymaya başladığı yer, bilinçli
+   karar gerektiriyor.
+4. Dışa aktarma: JSON ve asistana verilecek föy. İskelet kod üretimi için.
+5. Diğer türler için şemalar. Buzdolabı.
+
+Kapsam dışı bırakıldı: **yapay zeka ile hissiyat testi.** Sistemin kendi
+mantığına aykırı, `karar` işkolu hiçbir asistandan etkilenmiyor. Testi
+geliştirici yapar. Sistemin test konusunda verebileceği iki şey var ve ikisi
+de zekâ gerektirmiyor: veri tutarlılığı kontrolleri (`gates.js` kalıbında,
+hesaplanır) ve bileşen türüne göre sabit test föyü (`genres.js` içindeki
+tuzaklar kalıbında, bir kez yazılır).
+
+## Ne yapıldı (v2.4: tempo gerçeklik kontrolü)
+
+Kullanıcı sihirbazı yeniden doldururken günlük süreye 360 dakika yazdı ve
+sistem "Rahat" dedi. Karar aritmetik olarak doğruydu ama plan gerçek değildi:
+kullanıcı tam zamanlı çalışıyor ve haftada 30 saati bir yıl boyunca
+sürdüremez.
+
+Ortaya çıkan üç kusur:
+
+### 1. Sistem kendi kuralını kendi girdisine uygulamıyordu
+
+`estimate.js` içinde `MAX_REALISTIC_DAILY = 240` sabiti vardı ve sistem
+*kendi önerdiği* kaldıraç bu sınırın üstündeyse onu "gerçekçi değil" diye
+işaretleyip tıklanamaz yapıyordu. Ama kullanıcı aynı sayıyı 4. adımda elle
+yazdığında hiçbir şey demiyordu. Aynı sayı, kim yazdığına göre bir kez
+reddediliyor bir kez kabul ediliyordu.
+
+`KURALLAR.md` içindeki "gerçekçi olmayan öneri, gerçekçi öneriyle aynı
+görünmez" maddesinin doğrudan ihlaliydi.
+
+### 2. Üst sınır tahmin ediliyordu, sorulmuyordu
+
+Sabit 240 dakika, kimin için sürdürülebilir olduğu belirsiz bir sayıydı. Tam
+zamanlı çalışan biri ile tüm gününü projeye ayırabilen biri aynı tavana
+sahip olamaz.
+
+Eklendi: `COMMITMENT_MODES` (`options.js`) ve sihirbazın 4. adımında
+"Günün geri kalanında ne yapıyorsun?" sorusu. Tavan artık bu cevaptan
+türetiliyor: tam zamanlı iş/okul 180 dakika, yarı zamanlı 300, tam zaman
+ayırabilen 420. Bu sayılar ölçüm değil üst sınır kabulü ve arayüzde de
+böyle sunuluyor. Ayarlar ekranından sonradan değiştirilebiliyor.
+
+### 3. Gerçeklik katsayısı her tempoda sabitti
+
+`REALISM_FACTOR = 0.8` günde 1 saat için makul, ama 8 saatlik mesai sonrası
+6. saat günün 1. saatiyle aynı işi çıkarmaz. Sabit katsayı, yüksek tempo
+girildiğinde elindeki saati **olduğundan fazla** gösteriyordu.
+
+Katsayı ikiye bölündü: tavanın altındaki saatler `REALISM_FACTOR` (0.8),
+üstündekiler `OVERTIME_REALISM_FACTOR` (0.5) ile sayılıyor. Kullanıcının
+Mytherra senaryosunda 360 dakika/gün için elindeki saat 1248'den 1014'e,
+etkin katsayı %80'den %65'e indi.
+
+Bu değişiklik `buildLevers` içindeki iki hesabı da etkiledi ve ikisi de
+düzeltildi: "günlük süreyi artır" kaldıracı artık iki parçalı katsayının
+tersini alıyor (`dailyMinutesForWeeklyHours`), "tarihi ertele" kaldıracı ve
+gerçek maliyet hesabı mevcut temponun kendi etkin katsayısını kullanıyor.
+Düz bölme, tavanın üstünde çalışan biri için gereken süreyi az gösteriyordu.
+
+### En önemli kısım: sistem tempoyu suçlamıyor
+
+Uyarı sadece "bu tempo fazla" demiyor, sürdürülebilir tavanın altında kalan
+en düşük yeterli tempoyu hesaplayıp gösteriyor ve tek tıkla uyguluyor.
+Mytherra'nın ilk sürümünde bu 105 dakika: kapsam zaten sığıyordu, 360
+dakikaya hiç gerek yoktu.
+
+Kapsam, tavanın altındaki hiçbir tempoyla sığmıyorsa (`scopeNeedsChange`)
+sistem tempo önerisi vermiyor ve bunu açıkça söylüyor: sorun tempoda değil
+kapsamda. Böylece günlük süreyi şişirmek bir kaçış kapısı olmaktan çıkıyor.
+
+Tarayıcıda doğrulandı (Chrome, DevTools Protocol): 120 dakikada uyarı yok ve
+katsayı %80; 360 dakikada uyarı çıkıyor, katsayı %65, öneri 105 dakika;
+düğmeye basınca alan 105 oluyor ve uyarı kayboluyor; "tüm zamanımı
+ayırabiliyorum" seçilince 360 dakika uyarı vermiyor; tam kapsamda uyarı
+çıkıyor ama düğme çıkmıyor. Aydınlık ve karanlık tema, 390px mobil yerleşim
+(yatay taşma yok), sıfır JavaScript hatası, `lint` ve `build` temiz.
+
+Geriye dönük uyum: `commitmentId` alanı olmayan eski kayıtlar varsayılan
+tavana (`yan`, 180 dakika) düşüyor. Tavanın altındaki tempolarda hesap
+eskisiyle birebir aynı kalıyor, `KARARLAR.md` içindeki sayılar (10547 saat,
+27308 USD, 607 ay) değişmedi.
+
 ## Ne yapıldı (v2.3: sihirbaz taslağı, gerçek bir veri kaybından sonra)
 
 Kullanıcı sihirbazı doldurdu ama "Projeyi başlat" demeden önce girdiği her şey

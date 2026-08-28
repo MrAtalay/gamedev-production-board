@@ -134,10 +134,119 @@ export const MULTIPLAYER_MODES = [
   },
 ]
 
+// Hedef platform. Cok oyunculu gibi, sonradan eklenen bir ozellik degil:
+// kontrol semasini, arayuz yerlesimini ve test surecini bastan belirler.
+//
+// Mobil, "ayni oyunu kucuk ekrana koymak" degildir. Dokunmatik kontrol
+// yeniden tasarim ister, ekran oranlari ve guvenli alanlar coktur, cihaz
+// performans araligi genistir ve magaza inceleme sureci (sertifika,
+// imzalama, red donguleri) ilk seferde en cok saldiran yerdir.
+//
+// Carpanlar diger tum carpanlar gibi buyukluk mertebesi verir, kesin
+// sayi degil.
+export const PLATFORM_TARGETS = [
+  {
+    id: 'pc',
+    name: 'Bilgisayar',
+    multiplier: 1,
+    stores: ['steam', 'itch', 'diger'],
+    note: 'Klavye ve fare, tek ekran orani, en cok belge ve ornek burada.',
+  },
+  {
+    id: 'mobil',
+    name: 'Mobil (iOS / Android)',
+    multiplier: 1.3,
+    stores: ['appstore', 'googleplay', 'diger'],
+    note:
+      'Dokunmatik kontrol bir port degil, yeniden tasarimdir. Ekran oranlari, ' +
+      'cihaz performans araligi ve magaza inceleme sureci ek yuk getirir.',
+  },
+  {
+    id: 'ikisi',
+    name: 'İkisi birden',
+    // 1.3 + 1.3 degil: ortak is var. Ama test matrisi ikiye katlanir ve
+    // iki ayri kontrol semasi ile iki ayri magaza sureci yurur.
+    multiplier: 1.6,
+    stores: ['steam', 'itch', 'appstore', 'googleplay', 'diger'],
+    note:
+      'Iki kontrol semasi, iki arayuz yerlesimi, iki magaza sureci ve iki kat ' +
+      'test. Ilk oyunda genellikle once tek platform bitirilir.',
+  },
+]
+
+// Sanat yaklasimi ile gorsel uretim aracinin ortusmesi.
+//
+// Ikisi de ayni sorunu cozuyor: sanati kendin uretmemek. Ust uste
+// carpildiklarinda kazanc iki kez sayiliyordu.
+//
+// Sayilar, aracin kazancinin ne kadarinin gecerli kaldigini soyluyor:
+//   minimal (0.50): kutu ve basit sekil ciziyorsun, uretmek zaten hizli.
+//     Bir ureteci burada kullanmanin kazanci yarisi kadar.
+//   hazir (0.65): isin cogu varlik secmek, uyarlamak ve tutarli tutmak.
+//     Ureteç bosluk doldurmada yardim eder, secim ve uyarlamada etmez.
+//   kendi (1.00): sanati sifirdan sen uretiyorsun, kazanc tam gecerli.
+export const ART_TOOL_OVERLAP = {
+  minimal: 0.5,
+  hazir: 0.65,
+  kendi: 1,
+}
+
 // Planlanan sürenin ne kadarinin gercekten calisma olarak gectigi.
 // Hastalik, is yogunlugu, motivasyon dususu, arac sorunlari.
 // Bu sayiyi gizlemiyoruz, kullaniciya acikca gosteriyoruz.
 export const REALISM_FACTOR = 0.8
+
+// ---- Günlük tempo ve sürdürülebilirlik ----
+//
+// Sistem, gerçekçi olmayan bir tempoyu kendi ÖNERİSİ olarak sunmuyordu
+// (estimate.js içindeki MAX_REALISTIC_DAILY), ama kullanıcı aynı tempoyu
+// elle yazdığında sessiz kalıyordu. Aynı sayı, kim yazdığına göre bir kez
+// "gerçekçi değil" bir kez "Rahat" oluyordu. Bu tutarsızlık giderildi.
+//
+// Sürdürülebilir üst sınırı tahmin etmek yerine kullanıcıya soruyoruz:
+// günde kaç saat ayırabileceğin, günün geri kalanında ne yaptığına bağlı.
+// Aşağıdaki sayılar ölçüm değil, üst sınır kabulüdür. Arayüzde de böyle
+// sunuluyor, çünkü kullanıcının kendi durumu bu kabulden farklı olabilir.
+export const COMMITMENT_MODES = [
+  {
+    id: 'yan',
+    name: 'Tam zamanlı bir işim veya okulum var',
+    // Mesai sonrası akşamlar. Birkaç gün 5 saat yapılabilir, aylarca değil.
+    sustainableDailyMinutes: 180,
+    note:
+      'Proje, dolu bir günün üstüne biniyor. Sürdürülebilir tavan günde ' +
+      'yaklaşık 3 saat kabul ediliyor.',
+  },
+  {
+    id: 'yarim',
+    name: 'Yarı zamanlı çalışıyorum veya okuyorum',
+    sustainableDailyMinutes: 300,
+    note: 'Günün bir kısmı serbest. Sürdürülebilir tavan yaklaşık 5 saat.',
+  },
+  {
+    id: 'tam',
+    name: 'Tüm zamanımı buna ayırabiliyorum',
+    // Tam zamanlı geliştiriciler bile günde 8 saat odaklanmış yaratıcı iş
+    // çıkarmaz. 7 saat, iyi giden bir günün üst sınırı.
+    sustainableDailyMinutes: 420,
+    note:
+      'Başka bir işin yok. Sürdürülebilir tavan yaklaşık 7 saat: tam zamanlı ' +
+      'çalışanlar bile günde 8 saat odaklanmış yaratıcı iş çıkarmaz.',
+  },
+]
+
+// Sürdürülebilir sınırın ÜSTÜNDEKİ saatler için ayrı katsayı.
+//
+// Sebep iki tane. Birincisi verim: 8 saatlik mesai sonrası 6. saat, günün
+// 1. saatiyle aynı işi çıkarmaz. İkincisi süreklilik: bu tempo haftalarca
+// korunamadığı için plan sık bozulur ve telafi edilmez.
+//
+// 0.5, REALISM_FACTOR'ın belirgin biçimde altında olsun diye seçildi.
+// Kesin bir ölçüm değil; amacı, sınırın üstündeki saatleri sınırın
+// altındaki saatlerle aynı değerde saymamak.
+export const OVERTIME_REALISM_FACTOR = 0.5
+
+export const DEFAULT_COMMITMENT_ID = 'yan'
 
 // ---- Yapay zeka asistanları ----
 //

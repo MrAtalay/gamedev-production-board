@@ -5,6 +5,7 @@
 
 import { PHASES, phaseIndex } from '../data/phases.js'
 import { findGenre } from '../data/genres.js'
+import { PLATFORM_TARGETS, findOption } from '../data/options.js'
 
 export const PROJECT_VERSION = 1
 
@@ -35,13 +36,26 @@ export function createProject(input) {
       artId: input.artId,
       teamId: input.teamId,
       multiplayerId: input.multiplayerId || 'tek',
+      platformId: input.platformId || 'pc',
       aiTools: input.aiTools || {},
       aiCosts: input.aiCosts || {},
       otherMonthlyCost: input.otherMonthlyCost || 0,
       oneTimeCost: input.oneTimeCost || 0,
-      storeId: input.storeId || 'steam',
+      // Mağaza varsayılanı platformdan türetilir: mobil bir projede Steam'i
+      // varsayılan yapmak, yanlış pay ve yanlış kayıt ücretiyle hesap
+      // yapmak demekti.
+      storeId:
+        input.storeId ||
+        findOption(PLATFORM_TARGETS, input.platformId || 'pc').stores[0],
       revenue: {},
+      // Mağaza başına kayıt ücreti ve ne zaman kontrol edildiği.
+      // Tek alan olduğunda mağaza değişince yanlış tutar taşınıyordu.
+      storeFees: {},
+      storeFeeCheckedAt: {},
       engineName: input.engineName || '',
+      // Sürdürülebilir günlük tavan bu cevaptan türetiliyor. Eski
+      // kayıtlarda yok, estimate.js varsayılana düşüyor.
+      commitmentId: input.commitmentId || 'yan',
       dailyMinutes: input.dailyMinutes,
       daysPerWeek: input.daysPerWeek,
       deadline: input.deadline,
@@ -65,6 +79,9 @@ export function createProject(input) {
       plannedUnits: '',
       postmortem: '',
     },
+    // İçerik veri tabanı. Kabaca isimle başlar, zamanla alanlar dolar.
+    // Asıl değeri: plannedUnits'i tahmin olmaktan çıkarıp sayım yapmak.
+    content: { items: [] },
     scope: { in: [], out: [] },
     icebox: [],
     risks: [],

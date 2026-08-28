@@ -11,12 +11,32 @@
 //
 // İkinci gruba uydurma bir oran yazmak, bu aracın var oluş sebebine aykırı
 // olurdu: yanlış bir sayı, hiç sayı olmamasından kötüdür.
+//
+// ÜÇÜNCÜ BİR DURUM DAHA VAR: birinci gruptaki sayılar da zamanla eskir.
+// Steam'in kayıt ücreti bugün doğru olabilir, iki yıl sonra olmayabilir.
+// Bu yüzden yazılan her tutarın yanına BİLİNDİĞİ TARİH konuyor ve arayüz
+// "sistemin son bildiği tutar bu, doğrula" diyor. Sessizce eski bir sayı
+// göstermek, sayıyı hiç göstermemekten kötüdür.
+//
+// Bu tutarlar için bağlanabilecek bir API yok: ne Valve, ne Apple, ne de
+// Google kayıt ücretlerini programatik bir uçtan yayınlıyor. Döviz kuru
+// için API var ve bağlı (rates.js), ücretler için tek dürüst yol
+// kullanıcının kontrol edip girmesi.
+
+// Yazılı ücretlerin hangi tarih itibarıyla doğru kabul edildiği.
+// Bu tarihten eskiyse arayüz uyarı gösterir.
+export const FEE_KNOWN_AS_OF = '2026-05'
+
+// Ücretin "eski" sayılacağı süre. Mağaza ücretleri sık değişmez, ama
+// yıllar içinde değişir.
+export const FEE_STALE_MONTHS = 12
 
 export const STORES = [
   {
     id: 'steam',
     name: 'Steam',
     oneTimeFee: 100,
+    feeKnownAsOf: FEE_KNOWN_AS_OF,
     feeCurrency: 'USD',
     revenueShare: 0.3,
     // Steam Direct ücreti, oyun 1000 dolar düzeltilmiş brüt gelire ulaşınca
@@ -35,6 +55,35 @@ export const STORES = [
     note:
       'Kayıt ücreti yok. Mağaza payını kendin belirliyorsun, varsayılan ' +
       'yüzde 10 kabul edildi.',
+  },
+  {
+    id: 'appstore',
+    name: 'App Store (iOS)',
+    // Apple'ın geliştirici programı YILLIK ücretlidir, tek seferlik değil.
+    // Tutarı ülkeye ve zamana göre değiştiği için buraya yazılmadı:
+    // dosyanın başındaki kural gereği kullanıcı kendi güncel tutarını girer.
+    oneTimeFee: 0,
+    verifyFee: true,
+    feeCurrency: 'USD',
+    revenueShare: 0.3,
+    note:
+      'Geliştirici programı ücreti YILLIK ödenir ve proje uzadıkça tekrar eder. ' +
+      'Güncel tutarı Apple\'dan kontrol edip gir. Mağaza payı yüzde 30, ama ' +
+      'küçük geliştiriciler için indirimli bir program var, uygunluğunu kontrol et.',
+  },
+  {
+    id: 'googleplay',
+    name: 'Google Play (Android)',
+    // Kayıt ücreti tek seferliktir, ama tutar zamanla degistigi icin
+    // yine kullanicidan isteniyor.
+    oneTimeFee: 0,
+    verifyFee: true,
+    feeCurrency: 'USD',
+    revenueShare: 0.3,
+    note:
+      'Kayıt ücreti tek seferlik. Güncel tutarı Google Play Console\'dan kontrol ' +
+      'edip gir. Mağaza payı yüzde 30, ama küçük geliştiriciler için indirimli ' +
+      'bir program var, uygunluğunu kontrol et.',
   },
   {
     id: 'diger',
@@ -118,3 +167,11 @@ export const REVENUE_FIELDS = [
       'düşme durumuna göre tamamen değişir. Muhasebecine sor ve buraya gir.',
   },
 ]
+
+// Platformun izin verdiği mağazalar. Mobil seçildiyse Steam'i seçenek
+// olarak göstermek anlamsız olurdu. İzin listesi options.js içindeki
+// PLATFORM_TARGETS kayıtlarından gelir.
+export function storesFor(allowedIds) {
+  if (!allowedIds || allowedIds.length === 0) return STORES
+  return STORES.filter((s) => allowedIds.includes(s.id))
+}

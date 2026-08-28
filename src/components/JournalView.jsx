@@ -1,6 +1,8 @@
+import { useRef, useState } from 'react'
 import Icon from './Icon.jsx'
 import { formatDate } from '../lib/estimate.js'
 import { totalLoggedMinutes, streakInfo } from '../lib/project.js'
+import { durumFoyu, parseRapor, raporFarki } from '../lib/rapor.js'
 
 const HISTORY_DAYS = 35
 
@@ -17,7 +19,21 @@ function lastDays(count) {
   return days
 }
 
-export default function JournalView({ project }) {
+export default function JournalView({ project, actions, toast }) {
+  const raporRef = useRef(null)
+  const [fark, setFark] = useState(null)
+  const [raporHata, setRaporHata] = useState('')
+
+  function indir(metin, ad, tip) {
+    const blob = new Blob([metin], { type: tip })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = ad
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const sessions = [...project.sessions].reverse()
   const totalMinutes = totalLoggedMinutes(project)
   const streak = streakInfo(project)
@@ -121,6 +137,179 @@ export default function JournalView({ project }) {
               </li>
             ))}
           </ul>
+        )}
+      </div>
+
+      <div className="card">
+        <div className="card-head">
+          <h2>
+            <Icon name="upload" size={17} />
+            Dışarıdaki asistanla çalışma
+          </h2>
+        </div>
+        <p className="card-note" style={{ marginBottom: 14 }}>
+          Oyunu başka bir bilgisayarda geliştiriyorsan, panonun durumunu föy
+          olarak dışarı verip, çalışma bitince iş raporunu buraya alabilirsin.
+          Dosya üzerinden yürür: internet, anahtar veya hesap gerekmez.
+        </p>
+
+        <div className="btn-row">
+          <button
+            className="btn btn-sm"
+            onClick={() => indir(durumFoyu(project), 'durum-foyu.md', 'text/markdown')}
+          >
+            <Icon name="download" size={15} />
+            Durum föyünü indir
+          </button>
+          <button
+            className="btn btn-sm"
+            onClick={() =>
+              navigator.clipboard.writeText(durumFoyu(project)).then(
+                () => toast('Durum föyü panoya kopyalandı.', 'good'),
+                () => toast('Kopyalanamadı.', 'bad')
+              )
+            }
+          >
+            Föyü kopyala
+          </button>
+          <button className="btn btn-sm" onClick={() => raporRef.current.click()}>
+            <Icon name="upload" size={15} />
+            İş raporu al
+          </button>
+          <input
+            ref={raporRef}
+            type="file"
+            accept="application/json"
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              const file = e.target.files[0]
+              e.target.value = ''
+              if (!file) return
+              const reader = new FileReader()
+              reader.onload = () => {
+                try {
+                  const rapor = parseRapor(String(reader.result))
+                  setRaporHata('')
+                  setFark(raporFarki(project, rapor))
+                } catch (err) {
+                  setFark(null)
+                  setRaporHata(err.message)
+                }
+              }
+              reader.readAsText(file)
+            }}
+          />
+        </div>
+
+        {raporHata && (
+          <div className="rules" style={{ marginTop: 14, marginBottom: 0 }}>
+            <div className="rules-title">
+              <Icon name="alert" size={15} />
+              Rapor okunamadı
+            </div>
+            <p style={{ fontSize: 13.5, margin: 0 }}>{raporHata}</p>
+          </div>
+        )}
+
+        {fark && (
+          <>
+            <div className="divider" />
+            <h3 style={{ marginBottom: 10 }}>Bu rapor neyi değiştirecek</h3>
+
+            {fark.toplam === 0 ? (
+              <p className="small muted">
+                Uygulanacak bir şey yok. Aşağıdaki atlananlara bak.
+              </p>
+            ) : (
+              <ul className="item-list" style={{ marginBottom: 14 }}>
+                {fark.uygulanacak.oturumlar.length > 0 && (
+                  <li className="small">
+                    <strong>{fark.uygulanacak.oturumlar.length} oturum</strong>, toplam{' '}
+                    {fark.dakika} dakika
+                  </li>
+                )}
+                {fark.uygulanacak.adimlar.length > 0 && (
+                  <li className="small">
+                    <strong>{fark.uygulanacak.adimlar.length} adım</strong> tamamlanmış
+                    olarak işaretlenecek: {fark.uygulanacak.adimlar.join(', ')}
+                  </li>
+                )}
+                {fark.uygulanacak.teslimatlar.length > 0 && (
+                  <li className="small">
+                    <strong>{fark.uygulanacak.teslimatlar.length} teslimat</strong>{' '}
+                    tamamlanacak: {fark.uygulanacak.teslimatlar.join(', ')}
+                  </li>
+                )}
+                {fark.uygulanacak.eklenen.length > 0 && (
+                  <li className="small">
+                    <strong>{fark.uygulanacak.eklenen.length} içerik bileşeni</strong>{' '}
+                    eklenecek: {fark.uygulanacak.eklenen.map((x) => x.name).join(', ')}
+                  </li>
+                )}
+                {fark.uygulanacak.guncellenen.length > 0 && (
+                  <li className="small">
+                    <strong>{fark.uygulanacak.guncellenen.length} bileşen</strong>{' '}
+                    güncellenecek:{' '}
+                    {fark.uygulanacak.guncellenen.map((x) => x.name).join(', ')}
+                  </li>
+                )}
+                {fark.uygulanacak.notlar.length > 0 && (
+                  <li className="small">
+                    <strong>{fark.uygulanacak.notlar.length} not</strong> günlüğe düşecek
+                  </li>
+                )}
+                {fark.uygulanacak.hatalar.length > 0 && (
+                  <li className="small">
+                    <strong>{fark.uygulanacak.hatalar.length} hata</strong> kaydına eklenecek
+                  </li>
+                )}
+              </ul>
+            )}
+
+            {fark.yasakli.length > 0 && (
+              <div className="rules" style={{ marginBottom: 14 }}>
+                <div className="rules-title">
+                  <Icon name="lock" size={15} />
+                  Yok sayılan alanlar
+                </div>
+                <p style={{ fontSize: 13.5, margin: 0 }}>
+                  Rapor şu alanlara dokunmaya çalışmış: {fark.yasakli.join(', ')}. Kapı
+                  kontrolleri, kapsam ve tahmin eksenleri rapordan değiştirilemez. Kapıyı
+                  sen değerlendirirsin, kapsamı sen belirlersin.
+                </p>
+              </div>
+            )}
+
+            {fark.atlanan.length > 0 && (
+              <div className="hint-box" style={{ marginBottom: 14 }}>
+                <strong>{fark.atlanan.length} madde atlandı.</strong> Sessizce yok
+                saymıyoruz, çünkü asistan bunları yaptığını sanıyor olabilir:
+                <ul style={{ margin: '8px 0 0', paddingLeft: 20 }}>
+                  {fark.atlanan.map((a, i) => (
+                    <li key={i} style={{ marginBottom: 3 }}>
+                      {a.ne}: <strong>{a.deger}</strong>, {a.sebep}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="btn-row">
+              <button
+                className="btn btn-sm btn-primary"
+                disabled={fark.toplam === 0}
+                onClick={() => {
+                  actions.applyRapor(fark)
+                  setFark(null)
+                }}
+              >
+                Uygula
+              </button>
+              <button className="btn btn-sm btn-ghost" onClick={() => setFark(null)}>
+                Vazgeç
+              </button>
+            </div>
+          </>
         )}
       </div>
     </div>
