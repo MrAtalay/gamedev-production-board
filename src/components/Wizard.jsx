@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from 'react'
 import Icon from './Icon.jsx'
+import NumberField from './NumberField.jsx'
 import { loadDraft, saveDraft } from '../lib/storage.js'
 import { GENRES, findGenre } from '../data/genres.js'
 import {
@@ -299,23 +300,21 @@ export default function Wizard({ onFinish }) {
               <div className="field">
                 <label>Günde kaç dakika?</label>
                 <div className="help">Kötü bir günde bile yapabileceğin süre.</div>
-                <input
-                  type="number"
+                <NumberField
                   min="15"
                   step="15"
                   value={form.dailyMinutes}
-                  onChange={(e) => set({ dailyMinutes: Number(e.target.value) })}
+                  onChange={(v) => set({ dailyMinutes: Number(v) })}
                 />
               </div>
               <div className="field">
                 <label>Haftada kaç gün?</label>
                 <div className="help">Yedi yazma. Ara vermek zorunda kalacaksın.</div>
-                <input
-                  type="number"
+                <NumberField
                   min="1"
                   max="7"
                   value={form.daysPerWeek}
-                  onChange={(e) => set({ daysPerWeek: Number(e.target.value) })}
+                  onChange={(v) => set({ daysPerWeek: Number(v) })}
                 />
               </div>
             </div>
@@ -653,8 +652,7 @@ export default function Wizard({ onFinish }) {
                   </div>
                   {on && (
                     <div style={{ width: 130 }}>
-                      <input
-                        type="number"
+                      <NumberField
                         min="0"
                         placeholder="aylık"
                         value={
@@ -662,7 +660,7 @@ export default function Wizard({ onFinish }) {
                             ? tool.defaultMonthly
                             : form.aiCosts[tool.id]
                         }
-                        onChange={(e) => setToolCost(tool.id, e.target.value)}
+                        onChange={(v) => setToolCost(tool.id, v)}
                       />
                       <div className="tiny muted" style={{ marginTop: 3 }}>
                         aylık maliyet
@@ -682,11 +680,10 @@ export default function Wizard({ onFinish }) {
               <div className="field">
                 <label>Diğer aylık giderler</label>
                 <div className="help">Motor aboneliği, bulut, barındırma.</div>
-                <input
-                  type="number"
+                <NumberField
                   min="0"
                   value={form.otherMonthlyCost}
-                  onChange={(e) => set({ otherMonthlyCost: Number(e.target.value) })}
+                  onChange={(v) => set({ otherMonthlyCost: Number(v) })}
                 />
               </div>
               <div className="field">
@@ -694,11 +691,10 @@ export default function Wizard({ onFinish }) {
                 <div className="help">
                   Mağaza kayıt ücreti, hazır varlık paketleri, donanım.
                 </div>
-                <input
-                  type="number"
+                <NumberField
                   min="0"
                   value={form.oneTimeCost}
-                  onChange={(e) => set({ oneTimeCost: Number(e.target.value) })}
+                  onChange={(v) => set({ oneTimeCost: Number(v) })}
                 />
               </div>
             </div>

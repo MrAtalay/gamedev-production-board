@@ -1449,3 +1449,248 @@ textarea:focus {
 *::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+
+/* ---- Form bileşenleri: temaya uydurma ---- */
+/*
+ * YAKLAŞIM: yerel elemanlar DEĞİŞTİRİLMİYOR, biçimlendiriliyor.
+ *
+ * Kendi açılır listeni yazmak görsel tutarlılık kazandırır ama klavyeyle
+ * gezinmeyi, ekran okuyucu desteğini ve mobilde işletim sisteminin kendi
+ * seçicisini kaybettirir. Bu kötü bir takas. Bu yüzden `appearance: none`
+ * ile sadece görünüm alınıyor, davranış tarayıcıda kalıyor.
+ *
+ * Bunun bir sınırı var ve gizlemiyoruz: açılan listenin KENDİSİ ve tarih
+ * seçicinin takvim penceresi işletim sistemi tarafından çiziliyor, CSS
+ * oraya ulaşamaz. Kapalı hali temaya uyar, açılan pencere uymaz.
+ */
+
+/* Odak halkası. Önceden sadece kenarlık rengi değişiyordu; klavyeyle
+   gezen biri için bu yeterince görünür değil. */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+.check:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---- Açılır liste ---- */
+
+:root {
+  /* Ok işareti bir arka plan görseli olduğu için currentColor kullanamıyor,
+     her tema için ayrı tanımlanıyor. */
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23948b78' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+:root[data-theme='dark'] {
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a89f8f' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: var(--select-arrow);
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  /* Ok işaretinin altına metin girmesin. */
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+select:hover {
+  border-color: var(--border-strong);
+}
+
+/* ---- Sayı kutusu (NumberField) ---- */
+/*
+ * Yerel yukarı/aşağı düğmesi işletim sisteminin renklerinde geliyor ve
+ * karanlık temada neredeyse görünmüyordu.
+ *
+ * Önce CSS ile gizleyip yerine kendi okumuzu koymak denendi ve
+ * ÇALIŞMADI: Chrome'un iki bölgeli tıklama davranışı bozuluyor, alt
+ * yarı çalışırken üst yarı çalışmıyordu. Tarayıcıda ölçülerek görüldü.
+ *
+ * Bu yüzden yerel düğme tamamen kaldırıldı ve okları NumberField
+ * bileşeni kendisi çiziyor. Yazı alanı hâlâ yerel `input type=number`:
+ * klavye okları, tekerlek ve ekran okuyucu davranışı duruyor.
+ */
+
+input[type='number'] {
+  appearance: textfield;
+  -webkit-appearance: textfield;
+}
+
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.number-field {
+  position: relative;
+  display: block;
+}
+
+.number-field input {
+  padding-right: 34px;
+}
+
+.number-steps {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  right: 1px;
+  width: 28px;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--border);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  overflow: hidden;
+}
+
+.number-steps button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.number-steps button:hover:not(:disabled) {
+  background-color: var(--surface-alt);
+  color: var(--accent);
+}
+
+.number-steps button:active:not(:disabled) {
+  background-color: var(--accent-soft);
+}
+
+.number-steps button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* İki ok arasında ince bir ayrım. */
+.number-steps button + button {
+  border-top: 1px solid var(--border);
+}
+
+/* ---- Tarih alanları ---- */
+/*
+ * Takvim ikonu tarayıcının, karanlık temada koyu zemin üstünde koyu
+ * duruyor. `filter` ile çevriliyor.
+ *
+ * SINIR: açılan takvim penceresi işletim sistemi tarafından çiziliyor
+ * ve CSS oraya ulaşmıyor. Kendi takvimimizi yazmak, klavye ve mobil
+ * davranışını kaybetmek demek olurdu. Kapalı hali temaya uyuyor,
+ * açılan pencere tarayıcının kalıyor.
+ */
+
+input[type='date'],
+input[type='month'] {
+  cursor: text;
+}
+
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='month']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.55;
+  border-radius: 4px;
+  padding: 2px;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+input[type='date']::-webkit-calendar-picker-indicator:hover,
+input[type='month']::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  background-color: var(--surface-alt);
+}
+
+
+/* Boş tarih alanının yer tutucusu da temaya uysun. */
+input[type='date']:not(:focus):invalid,
+input[type='month']:not(:focus):invalid {
+  color: var(--text-muted);
+}
+
+/* ---- Onay kutusu: odak ve devre dışı hali ---- */
+
+.check {
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.check:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.check:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ---- Devre dışı alanlar ---- */
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+
+/* ---- Tarayıcının kendi çizdiği yüzeyler ---- */
+/*
+ * BURASI ÖNCEDEN YANLIŞ BİLİNİYORDU. "Açılan listenin kendisi ve takvim
+ * penceresi işletim sistemi tarafından çiziliyor, CSS oraya ulaşmıyor"
+ * diye yazılmıştı. Doğru değil: `color-scheme` tam bunun için var.
+ *
+ * Tarayıcıya "bu sayfa karanlık" dendiğinde kendi çizdiği yüzeyleri de
+ * karanlık çiziyor: açılır liste penceresi, tarih seçicinin takvimi,
+ * otomatik tamamlama listesi ve varsayılan form renkleri.
+ *
+ * Bu, kendi takvimimizi yazmadan sorunu çözüyor. Yani klavye, ekran
+ * okuyucu ve mobil davranışı kaybetmeden.
+ */
+
+:root {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+/*
+ * Açılır listenin seçenekleri. Chrome bu pencereyi Windows'ta kendisi
+ * çiziyor ve `option` renklerini uyguluyor; `color-scheme` ile birlikte
+ * zemin de doğru geliyor. Bazı platformlarda bu satırlar yok sayılır,
+ * o durumda `color-scheme` tek başına yeterli oluyor.
+ */
+
+option {
+  background-color: var(--surface);
+  color: var(--text);
+}
+
+/*
+ * Tarih alanının içindeki gün/ay/yıl bölümleri. Seçili bölümün vurgu
+ * rengi de temaya bağlanıyor.
+ */
+
+input[type='date']::-webkit-datetime-edit-fields-wrapper,
+input[type='month']::-webkit-datetime-edit-fields-wrapper {
+  color: var(--text);
+}
+
+input[type='date']::-webkit-datetime-edit-text,
+input[type='month']::-webkit-datetime-edit-text {
+  color: var(--text-muted);
+}

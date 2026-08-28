@@ -1,38 +1,310 @@
 # Proje Panosu: Durum Notu
 
-## Yapılacak: temaya göre form bileşenleri (henüz yapılmadı)
+## Büyük konu: görünürlük ekseni (konuşuldu, karar verilmedi)
 
-Kullanıcının 28 Ağustos 2026'da istediği, **sonraya bırakılan** iş. O gün
-sadece hizalama ve sol panel düzenlemesi yapıldı, bileşenlerin kendisi
-yazılmadı.
+28 Ağustos 2026'da konuşulmaya başlandı. **Hızlı geçilmeyecek konu**,
+kullanıcının açık isteği bu. İçinde karara bağlanacak çok parametre var
+ve yarım yapılırsa aracın kendi ilkesine aykırı bir şey üretir.
 
-Kaydırma çubuğu bu listeden çıkarıldı: v3.1'de yapıldı. Sebebi, diğer
-maddelerden farklı olarak hiçbir bedeli olmaması: saf CSS, klavye ve
-ekran okuyucu davranışına dokunmuyor.
+### Konu neden açıldı
 
-Şu an tarayıcının yerel form bileşenleri kullanılıyor ve bunlar temanın
-dışında kalıyor:
+Kullanıcı şunu sordu: tutan projeler mi yapıyoruz, tutmayan mı, bunu
+bilmemiz lazım. Somut bir örnek de var: tanıdığı bir geliştirici bir
+oyun yayınladı, çok az inceleme aldı ve tutmadı. Kullanıcı aynı sona
+varmak istemiyor ve sistematik, ders çıkaran bir yol istiyor.
 
-- **Tarih seçici** (`input type="month"` ve `type="date"`). Karanlık temada
-  takvim ikonu ve açılan panel işletim sisteminin renklerinde geliyor.
-- **Açılır liste** (`select`). Ok işareti ve açılan liste tarayıcının.
-- **Sayı kutusu** (`input type="number"`). Yukarı aşağı okları tarayıcının,
-  karanlık temada zor görülüyor.
-- **Onay kutusu** (`input type="checkbox"`). Kapı ekranında ve içerik
-  listesinde kullanılıyor.
+(Örnek olayın ayrıntıları `KARARLAR.md` tarafında. Bu repo public,
+başka birinin oyununun adı ve ticari sonucu buraya yazılmıyor.)
 
-İstenen: bunların temaya uyan kendi sürümlerini yazmak.
+### Ölçülen boşluk
 
-**Dikkat edilecek:** yerel bileşenleri değiştirmenin bir bedeli var ve
-`KURALLAR.md` içindeki basitlik kuralıyla gerilim yaratıyor. Yerel bir
-`select` klavyeyle gezilebilir, ekran okuyucu tanır, mobilde işletim
-sisteminin kendi seçicisini açar. Kendi yazdığın bir açılır liste bunların
-hepsini elle yapmak zorundadır. Görsel tutarlılık için erişilebilirlik
-kaybetmek iyi bir takas değil.
+Panonun bu konuda şu an yaptığı: **hiçbir şey.**
 
-Önerilen sıra: önce en çok göze batanlar (sayı kutusu okları ve açılır
-liste oku, çünkü bunlar sadece CSS ile büyük ölçüde düzelir), tarih seçici
-en sona (en zoru ve en çok kaybettireni).
+- "İstek listesi" ifadesi tüm bilgi tabanında SIFIR kez geçiyor.
+- "Mağaza sayfası" ve "Duyuru planı" var, ama sadece Yayın fazının
+  içinde. Yayın fazı toplam işin %5'i ve en sonda.
+
+Yani pano, pazarlamayı bir son adım olarak kodluyor. Oysa istek listesi
+biriktirmek birinci günün işi. Bu, korkulan başarısızlık biçiminin
+araca kodlanmış hali.
+
+### Tartışmanın çıktısı
+
+Kullanıcı yaygın bir "başarı formülü" listesi getirdi (erişilebilirlik,
+bağımlılık yapan döngü, co-op, yayıncı odaklı tasarım, erken pazarlama,
+ömür boyu destek, zamanlama, sandbox). Liste üstünde iki itiraz kaydedildi:
+
+**1. Hayatta kalan yanılgısı.** Liste, çok satan birkaç oyundan geriye
+doğru çıkarılmış. Binlerce oyun bu maddelerin hepsini yaptı ve satmadı.
+Liste "başarılı oyunlar neye sahipti" sorusunu cevaplıyor, "ne başarı
+getirir" sorusunu değil. Bundan kontrol listesi yapmak, batacak bir
+projeye "her şeyi doğru yapıyorsun" diyen bir pano üretirdi. Aracın var
+oluş sebebinin tersi.
+
+**2. Liste olduğu gibi uygulanırsa ilk oyun bitmez.** Panonun kendi
+çarpanlarıyla: co-op 2.2x, sandbox kapsam patlaması, ömür boyu destek
+çıkıştan sonra yıllarca iş. Bunlar oyunların başardıktan sonra, ekiple
+veya parayla yaptığı şeyler.
+
+**Listede bir madde diğerlerinden farklı: istek listesi.** Tek
+ölçülebilir ve önceden davranılabilir olan o. Diğerleri ancak iş
+bittikten sonra değerlendirilebilir.
+
+### Önerilen yapı (karar verilmedi)
+
+Faz değil, fazlara PARALEL bir eksen. Panonun kapsam ve tempo için
+yaptığı şeyin aynısı, üçüncü bir eksene uygulanmış hali:
+
+1. Bütçe ekranındaki "beklenen satış" sayısından geriye çalış: bu satış
+   için çıkışta kaç istek listesi gerekiyor?
+2. Kullanıcı periyodik olarak gerçek sayıyı girer.
+3. Sistem eğilimi hesaplar ve söyler: hedef N, şu an M, bu tempoyla
+   çıkışta P olur.
+4. Tempo hedefe varmıyorsa bunu ÇIKIŞ GÜNÜ DEĞİL BUGÜN söyler.
+
+Yanında: mağaza sayfası, ilk duyuru ve demo, Yayın fazından çıkıp erken
+kontrol noktalarına taşınır.
+
+### Somut vaka: oyunun tanıtım sitesi (28 Ağustos 2026'da incelendi)
+
+Kullanıcının Claude Design üstünde duran, oyuna ait bir tanıtım sitesi
+var. Yaklaşık dört buçuk aydır duruyor. İncelendi ve görünürlük ekseninin
+neye benzemesi gerektiğini gösteren gerçek veri çıktı.
+
+**Sitenin kalitesi sorun değil.** Elle yazılmış, şablon değil, tutarlı
+sanat yönü ve gerçek etkileşimler var. Dünya kurgusu derin.
+
+**Sorun şu: site hiçbir şey toplamıyor.** Koda bakılarak doğrulandı:
+
+- Menüdeki "Wishlist" bağlantısı sayfa içi bir çapaya gidiyor, Steam'e
+  değil. Steam sayfası yok.
+- E-posta formu `preventDefault()` yapıp kullanıcıya "kaydedildi"
+  diyor ve **adresi siliyor.** Dosyada `fetch(`, `action=`, Formspree,
+  Netlify, Supabase, Firebase: hepsi sıfır kez geçiyor.
+- Bütün dış bağlantılar `href="#"`: Steam, Discord, X, YouTube, Press
+  Kit, About, Contact.
+
+Yani pazarlamanın GÖRÜNTÜSÜ var, İŞLEVİ yok. Siteyi beğenip adresini
+yazan herkes kayboldu, kaç kişi olduğu da bilinmiyor çünkü sayan bir şey
+yok.
+
+Üç bulgu daha:
+
+- Devlog dört buçuk aydır durmuş ve girdiler kurgu içinden yazılmış
+  (kurgusal yama notları), ortada derleme yokken.
+- Görseller yapay zeka üretimi (C2PA verisinde `GPT-4o` ve
+  `trainedAlgorithmicMedia`). Engel değil ama Steam bildirilmesini
+  istiyor.
+- **Site, yapılmayacak sürümü pazarlıyor.** Sitedeki kapsam tam
+  kapsamlı sürüm, `KARARLAR.md` ise ilk sürüm için çok daha küçük bir
+  ölçeğe karar vermişti. Bu siteye bakıp istek listesine ekleyen biri
+  çok daha küçük bir oyun alırsa iade ve olumsuz inceleme riski doğar.
+
+**Panoya çıkarılacak ders:** görünürlük ekseni "pazarlama yaptın mı"
+diye sormamalı. Ölçülebilir olanı sormalı: kaç kişi topladın, nereye
+kaydediliyor, sayabiliyor musun. Güzel bir site yapmak pazarlama
+değildir; toplayan bir site yapmak pazarlamadır.
+
+### Dağıtım: kendi kurulucumuz mu, Steam mi
+
+Kullanıcının fikri: League of Legends'ın resmi sitesindeki gibi kendi
+kurulucumuz olabilir. Kendisi güvenlik kontrolleri yüzünden zaten
+Steam'in gerektiğini düşünüyor ve **sonuç doğru.** Sebepleri kayda
+geçiriliyor, konuşulurken lazım olacak:
+
+- **İmzasız çalıştırılabilir dosya**: Windows SmartScreen uyarı verir,
+  tarayıcı indirmede uyarır, virüs programı karantinaya alabilir. Kod
+  imzalama sertifikası yıllık ücretli ve doğrulama istiyor.
+- **Asıl mesele barındırma değil keşfedilme.** Steam'in değeri dosyayı
+  tutması değil: istek listesi sistemi, algoritma, "benzer oyunlar"
+  yüzeyi, inceleme altyapısı, iade sistemi ve ülkelere göre ödeme ile
+  vergi işlemleri. Kendi sitenden dağıtmak bunların hiçbirini vermez.
+- **Riot bunu yapabiliyor çünkü Riot.** Kurumsal marka, sertifika,
+  destek ekibi ve zaten var olan kitle. Kıyas noktası olarak yanıltıcı.
+
+Yine de kendi barındırdığın bir yapı için meşru bir yer var: Steam
+öncesi küçük bir gruba kapalı test yapısı dağıtmak. Bunun için kurulucu
+da gerekmez, itch.io gibi bir yer kurulum gerektirmeden iş görür.
+
+### Karara bağlanacak parametreler
+
+Kullanıcının saydıkları ve konuşurken çıkanlar. Liste eksik, konuşma
+sürecek:
+
+- **Video yayınlama**: hangi platformlar, hangi sıklık, geliştirme
+  günlüğü mü yoksa oynanış mı, kaç saat tutar.
+- **Hesap açma**: hangi platformlarda hesap gerekiyor, ne zaman
+  açılmalı, her birinin bakım maliyeti ne.
+- **İletişime geçme**: yayıncılar, içerik üreticileri, basın. Kime,
+  ne zaman, kaç kişiye, hangi mesajla.
+- **Demo ve festivaller**: demo ne zaman hazır olmalı, hangi etkinliğe
+  yetişecek, demo yapmak kaç saat.
+- **Mağaza sayfası ne zaman açılır**: istek listesi ancak sayfa
+  yayındayken birikiyor, bu yüzden sayfanın açılma tarihi kritik.
+- **Bu işlerin saat maliyeti**: hepsi zaman yiyor ve şu an tahmine hiç
+  dahil değil. Görünürlük işi bir işkolu mu olmalı, yoksa mevcut
+  "karar" işkoluna mı girer?
+- **Ölçüm sıklığı**: haftalık mı aylık mı, kullanıcıyı yormadan.
+
+### Dürüstlük kısıtı (bu eksende en kritik nokta)
+
+**İstek listesi > satış dönüşüm oranı koda YAZILMAYACAK.** Bu oran
+oyuna, türe, zamanlamaya, fiyata ve indirime göre kat kat değişiyor.
+Tek bir sayı vermek `KURALLAR.md` içindeki "bilinmeyen sayı
+uydurulmaz" maddesinin ihlali olur.
+
+Vergi oranlarında yapılanın aynısı yapılacak: varsayılan gelir,
+"doğrula" etiketiyle işaretli, kullanıcı kendi araştırmasıyla girer.
+
+Aynı şekilde bu eksen bir "başarı skoru" ÜRETMEYECEK. Sistem oyunun
+tutup tutmayacağını bilemez ve bilemeyeceğini söylemek zorundadır.
+Söyleyebileceği tek şey ölçülebilir olan: kaç kişi bu oyunun
+varlığından haberdar.
+
+---
+
+## Yapılacak: kendi açılır listemiz (henüz yapılmadı)
+
+28 Ağustos 2026'da konuşuldu, **bilinçli olarak ertelendi.** Yapılabilir
+bir iş, imkansız değil. Ertelenme sebebi bedeli.
+
+### Şu anki durum
+
+`color-scheme` sayesinde açılan liste ve takvim artık karanlık temada
+koyu zeminde açılıyor. Renk sorunu çözüldü. Kalan şikayet **biçim**:
+köşeler kare, seçili satırın vurgusu işletim sisteminin mavisi, bizim
+mor vurgu rengimiz değil. Yazı tipi de sayfanın değil.
+
+### "Tarayıcı çiziyor" ne demek
+
+`<select>` tıklanınca açılan liste **sayfanın parçası değil.** Sağ tık
+menüsü gibi, sayfanın üstünde ayrı bir katman olarak çiziliyor. Nitekim
+tarayıcı penceresinin kenarından taşabiliyor; sayfanın içindeki hiçbir
+şey bunu yapamaz.
+
+CSS sayfanın içindekileri biçimlendirir. O liste sayfanın içinde
+olmadığı için CSS ona ulaşmıyor. `color-scheme` bir istisna değil, bir
+İSTEK: tarayıcıya "bu sayfa karanlık, kendi çizdiklerini de karanlık
+çiz" diyoruz. Rengi söyleyebiliyoruz, köşe yarıçapını söyleyemiyoruz.
+
+### Kendi listemizi yazmak
+
+Mümkün ve zor değil. Yerel `<select>` yerine bir düğme ve altında liste
+gibi görünen bir `div` konur. O zaman köşe, renk, yazı tipi, animasyon,
+hepsi bizim olur.
+
+Bedeli, yerel elemanın bedavaya verdiği davranışları elle yazmak:
+
+- **Klavye**: yukarı/aşağı, Home/End, harfe basınca o harfle başlayana
+  atlama, Escape ile kapatma, Enter ile seçme, Tab ile çıkma.
+- **Ekran okuyucu**: `role="listbox"`, `role="option"`,
+  `aria-activedescendant`, `aria-expanded`, seçili durumun duyurulması.
+- **Konumlandırma**: ekranın altına yakınsa yukarı açılma, sayfa
+  kaydırılınca listenin takip etmesi veya kapanması, dışarı tıklayınca
+  kapanma.
+- **Mobil**: yerel `<select>` telefonda işletim sisteminin kendi
+  tekerlek seçicisini açar, bu kaybedilir.
+
+Kabaca 150-200 satır ve asıl iş görünüş değil, yukarıdaki listenin
+doğru çalışması. Yanlış yazılmış bir açılır liste, klavye kullanan
+birinin sayfada tıkanmasına sebep olur.
+
+### Karar
+
+Erteledik. Şu an renk doğru, biçim değil. Yapılacaksa tek seferde ve
+yukarıdaki dört maddenin hepsi yazılarak yapılmalı; yarısı yazılmış
+hali yerel `<select>`ten kötüdür.
+
+Aynı şey tarih seçici için de geçerli ve orada iş daha büyük.
+
+---
+
+## Ne yapıldı (v3.2: temaya uyan form bileşenleri)
+
+Yapılacak listesindeki iş bitti. Yaklaşım baştan belliydi ve korundu:
+**yerel elemanlar değiştirilmiyor, biçimlendiriliyor.** Kendi açılır
+listeni yazmak görsel tutarlılık kazandırır ama klavyeyle gezinmeyi,
+ekran okuyucu desteğini ve mobilde işletim sisteminin kendi seçicisini
+kaybettirir. Kötü bir takas.
+
+### Biçimlendirmenin yettiği yerler
+
+- **Açılır liste**: `appearance: none` ve gömülü SVG ok. Ok bir arka plan
+  görseli olduğu için `currentColor` kullanamıyor, her tema için ayrı
+  değişken tanımlandı (`--select-arrow`).
+- **Tarih alanları**: takvim ikonu karanlık temada `filter: invert(1)`
+  ile çevriliyor, üstüne gelince zemin alıyor.
+- **Onay kutusu**: zaten temalıydı, üstüne odak halkası, fareyle üstüne
+  gelme ve devre dışı hali eklendi.
+- **Odak halkası**: önceden sadece kenarlık rengi değişiyordu, klavyeyle
+  gezen biri için yeterince görünür değildi. Artık `focus-visible` ile
+  belirgin bir halka var.
+
+### Sayı kutusu: CSS yetmedi, bileşen yazıldı
+
+Önce CSS ile denendi: yerel yukarı/aşağı düğmesini gizleyip yerine kendi
+okumuzu koymak. **Çalışmadı.** Tarayıcıda gerçek fare tıklamasıyla
+ölçüldü: Chrome'un iki bölgeli tıklama davranışı bozuluyor, alt yarı
+çalışırken üst yarı çalışmıyordu. Bu, CSS'i geri alıp `NumberField`
+bileşenini yazmayı gerektirdi.
+
+Bileşen okları kendisi çiziyor ama yazı alanı hâlâ yerel
+`input type="number"`: klavye okları, tekerlek, sayı klavyesi,
+yapıştırma ve ekran okuyucu davranışı olduğu gibi duruyor.
+
+İki tasarım kararı:
+
+- **Yerel `stepUp()` kullanılmadı.** React kontrollü bir alanda DOM'u
+  doğrudan değiştirmek durumu bozar, çünkü React o değişikliği görmez.
+  Hesap bileşende yapılıp yukarı bildiriliyor. Kayan nokta artıkları
+  (0.1 + 0.2) da burada temizleniyor.
+- **Oklar klavyeyle gezilmiyor** (`tabIndex -1`). Yazı alanı zaten
+  odakta ve yukarı/aşağı tuşları aynı işi yapıyor; iki fazladan durak
+  eklemek klavyeyle gezinmeyi yavaşlatırdı.
+
+16 çağrı yeri dönüştürüldü. `onChange` artık olay değil doğrudan değer
+alıyor: `onChange={(v) => set({ dailyMinutes: Number(v) })}`.
+
+### Doğrulama
+
+Gerçek fare tıklamalarıyla: yukarı ok 180 > 195 > 210, aşağı ok
+210 > 195 > 180. Klavye oku çalışıyor, elle yazılan değer kaydediliyor,
+`min`/`max`/`step` geçiyor. Sınıra gelince ilgili ok devre dışı oluyor
+(7 iken yukarı pasif, 1 iken aşağı pasif). İki tema, sıfır JavaScript
+hatası.
+
+### Düzeltildi: açılan pencere de temaya uyduruldu
+
+Bu bölümde önce şu yazıyordu ve **yanlıştı**: "Açılan listenin kendisi ve
+takvim penceresi işletim sistemi tarafından çiziliyor, CSS oraya
+ulaşmıyor."
+
+Kullanıcı ekranda gördü ve sordu. Doğrusu: `color-scheme` tam bunun için
+var. Tarayıcıya "bu sayfa karanlık" dendiğinde kendi çizdiği yüzeyleri de
+karanlık çiziyor: açılır liste penceresi, tarih seçicinin takvimi,
+otomatik tamamlama listesi ve varsayılan form renkleri.
+
+`:root { color-scheme: light }` ve `:root[data-theme='dark'] {
+color-scheme: dark }` eklendi. Ayrıca `option` renkleri de temaya
+bağlandı: Chrome bu pencereyi Windows'ta kendisi çiziyor ve `option`
+renklerini uyguluyor.
+
+Bunun bir yan etkisi vardı ve düzeltildi: takvim ikonundaki
+`filter: invert(1)` artık gereksiz ve yanlış, çünkü `color-scheme` ikonu
+zaten doğru renkte çiziyor. Üstüne binince ters çevirirdi. Kaldırıldı.
+
+Böylece kendi takvimimizi yazmadan sorun çözüldü: klavye, ekran okuyucu
+ve mobil davranışı kaybedilmedi.
+
+**Ders:** "tarayıcı çiziyor, yapılamaz" demeden önce o alan için bir
+standart olup olmadığına bakılmalı. Bu durumda vardı.
+
+### Gerçekten yapılamayan
+
+Tarih alanı `08/27/2027` biçiminde görünüyor. Bu tarayıcının dil
+ayarından geliyor, CSS veya kodla değiştirilemiyor. Tarayıcı dili Türkçe
+olan bir makinede `27.08.2027` görünür. Kendi tarih alanımızı yazmak
+dışında bir yolu yok, o da klavye ve mobil davranışını kaybettirir.
 
 ---
 

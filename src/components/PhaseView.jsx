@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Icon from './Icon.jsx'
+import NumberField from './NumberField.jsx'
 import { totalContentUnits } from '../lib/content.js'
 import { PHASES } from '../data/phases.js'
 import {
@@ -114,22 +115,20 @@ function DeliverableCard({ project, deliverable, actions, goTo }) {
               <div className="field">
                 <label>Bir birim kaç saat sürdü?</label>
                 <div className="help">Dikey dilimde ölçtüğün gerçek süre.</div>
-                <input
-                  type="number"
+                <NumberField
                   min="0"
                   step="0.5"
                   value={project.fields.unitHours}
-                  onChange={(e) => actions.setField('unitHours', e.target.value)}
+                  onChange={(v) => actions.setField('unitHours', v)}
                 />
               </div>
               <div className="field">
                 <label>Toplam kaç birim üreteceksin?</label>
                 <div className="help">Bölüm, sahne, oda, bulmaca.</div>
-                <input
-                  type="number"
+                <NumberField
                   min="0"
                   value={project.fields.plannedUnits}
-                  onChange={(e) => actions.setField('plannedUnits', e.target.value)}
+                  onChange={(v) => actions.setField('plannedUnits', v)}
                 />
               </div>
             </div>

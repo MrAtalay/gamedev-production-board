@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Icon from './Icon.jsx'
+import NumberField from './NumberField.jsx'
 import { REVENUE_FIELDS, storesFor } from '../data/publishing.js'
 import { PLATFORM_TARGETS, findOption } from '../data/options.js'
 import { breakEven, scenarios, revenueSettings, findStore, storeFeeInfo } from '../lib/money.js'
@@ -108,12 +109,11 @@ export default function FinanceView({ project, actions }) {
             <Icon name="download" size={15} />
             {loading ? 'Alınıyor...' : 'Güncel kuru al'}
           </button>
-          <input
-            type="number"
+          <NumberField
             step="0.01"
             placeholder="veya kuru elle gir"
             value={manual}
-            onChange={(e) => setManual(e.target.value)}
+            onChange={(v) => setManual(v)}
             style={{ width: 190 }}
           />
         </div>
@@ -201,16 +201,15 @@ export default function FinanceView({ project, actions }) {
           <div className="field-row">
             <div className="field" style={{ marginBottom: 0 }}>
               <label className="tiny muted">Tutar (USD)</label>
-              <input
-                type="number"
+              <NumberField
                 min="0"
                 placeholder={feeInfo.source === 'sistem' ? String(feeInfo.value) : '0'}
                 value={(project.profile.storeFees || {})[selectedStore.id] || ''}
-                onChange={(e) =>
+                onChange={(v) =>
                   actions.setProfile({
                     storeFees: {
                       ...(project.profile.storeFees || {}),
-                      [selectedStore.id]: e.target.value,
+                      [selectedStore.id]: v,
                     },
                   })
                 }
@@ -257,12 +256,11 @@ export default function FinanceView({ project, actions }) {
               )}
             </label>
             <div className="help">{field.help}</div>
-            <input
-              type="number"
+            <NumberField
               min="0"
               step={field.percent ? 0.01 : field.step || 1}
               value={r[field.key]}
-              onChange={(e) => setRevenue(field.key, Number(e.target.value))}
+              onChange={(v) => setRevenue(field.key, Number(v))}
             />
             {field.percent && (
               <div className="tiny muted" style={{ marginTop: 4 }}>
@@ -278,11 +276,10 @@ export default function FinanceView({ project, actions }) {
           <div className="help">
             İyimser değil, gerçekçi bir sayı yaz. Bu sayı sadece senin tahminin.
           </div>
-          <input
-            type="number"
+          <NumberField
             min="0"
             value={r.expectedUnits}
-            onChange={(e) => setRevenue('expectedUnits', Number(e.target.value))}
+            onChange={(v) => setRevenue('expectedUnits', Number(v))}
           />
         </div>
       </div>

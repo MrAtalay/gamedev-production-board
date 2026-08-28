@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import Icon from './Icon.jsx'
+import NumberField from './NumberField.jsx'
 import { computeEstimate, formatDate } from '../lib/estimate.js'
 import { GENRES, findGenre } from '../data/genres.js'
 import {
@@ -120,25 +121,23 @@ export default function SettingsView({ project, archive, actions }) {
         <div className="field-row">
           <div className="field">
             <label>Günlük dakika</label>
-            <input
-              type="number"
+            <NumberField
               min="15"
               step="15"
               value={project.profile.dailyMinutes}
-              onChange={(e) =>
-                actions.setProfile({ dailyMinutes: Number(e.target.value) })
+              onChange={(v) =>
+                actions.setProfile({ dailyMinutes: Number(v) })
               }
             />
           </div>
           <div className="field">
             <label>Haftada gün</label>
-            <input
-              type="number"
+            <NumberField
               min="1"
               max="7"
               value={project.profile.daysPerWeek}
-              onChange={(e) =>
-                actions.setProfile({ daysPerWeek: Number(e.target.value) })
+              onChange={(v) =>
+                actions.setProfile({ daysPerWeek: Number(v) })
               }
             />
           </div>
@@ -213,15 +212,14 @@ export default function SettingsView({ project, archive, actions }) {
               </div>
               {on && (
                 <div style={{ width: 110 }}>
-                  <input
-                    type="number"
+                  <NumberField
                     min="0"
                     value={
                       costs[tool.id] === undefined ? tool.defaultMonthly : costs[tool.id]
                     }
-                    onChange={(e) =>
+                    onChange={(v) =>
                       actions.setProfile({
-                        aiCosts: { ...costs, [tool.id]: e.target.value },
+                        aiCosts: { ...costs, [tool.id]: v },
                       })
                     }
                   />
@@ -234,23 +232,21 @@ export default function SettingsView({ project, archive, actions }) {
         <div className="field-row" style={{ marginTop: 14 }}>
           <div className="field">
             <label>Diğer aylık giderler</label>
-            <input
-              type="number"
+            <NumberField
               min="0"
               value={project.profile.otherMonthlyCost || 0}
-              onChange={(e) =>
-                actions.setProfile({ otherMonthlyCost: Number(e.target.value) })
+              onChange={(v) =>
+                actions.setProfile({ otherMonthlyCost: Number(v) })
               }
             />
           </div>
           <div className="field">
             <label>Tek seferlik giderler</label>
-            <input
-              type="number"
+            <NumberField
               min="0"
               value={project.profile.oneTimeCost || 0}
-              onChange={(e) =>
-                actions.setProfile({ oneTimeCost: Number(e.target.value) })
+              onChange={(v) =>
+                actions.setProfile({ oneTimeCost: Number(v) })
               }
             />
           </div>
