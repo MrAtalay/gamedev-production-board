@@ -6,6 +6,7 @@
 import { PHASES, phaseIndex } from '../data/phases.js'
 import { findGenre } from '../data/genres.js'
 import { PLATFORM_TARGETS, findOption } from '../data/options.js'
+import { requiredHours } from './estimate.js'
 
 export const PROJECT_VERSION = 1
 
@@ -21,45 +22,62 @@ export function newId() {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36)
 }
 
+// Sihirbaz girdisinden profil nesnesi. createProject hem projeye koymak
+// hem de ilk tahmini hesaplamak için aynı profili kullanır.
+function buildProfile(input) {
+  return {
+    genreId: input.genreId,
+    scaleId: input.scaleId,
+    experienceId: input.experienceId,
+    engineId: input.engineId,
+    artId: input.artId,
+    teamId: input.teamId,
+    multiplayerId: input.multiplayerId || 'tek',
+    platformId: input.platformId || 'pc',
+    aiTools: input.aiTools || {},
+    aiCosts: input.aiCosts || {},
+    otherMonthlyCost: input.otherMonthlyCost || 0,
+    oneTimeCost: input.oneTimeCost || 0,
+    // Mağaza varsayılanı platformdan türetilir: mobil bir projede Steam'i
+    // varsayılan yapmak, yanlış pay ve yanlış kayıt ücretiyle hesap
+    // yapmak demekti.
+    storeId:
+      input.storeId ||
+      findOption(PLATFORM_TARGETS, input.platformId || 'pc').stores[0],
+    revenue: {},
+    // Mağaza başına kayıt ücreti ve ne zaman kontrol edildiği.
+    // Tek alan olduğunda mağaza değişince yanlış tutar taşınıyordu.
+    storeFees: {},
+    storeFeeCheckedAt: {},
+    engineName: input.engineName || '',
+    // Sürdürülebilir günlük tavan bu cevaptan türetiliyor. Eski
+    // kayıtlarda yok, estimate.js varsayılana düşüyor.
+    commitmentId: input.commitmentId || 'yan',
+    dailyMinutes: input.dailyMinutes,
+    daysPerWeek: input.daysPerWeek,
+    deadline: input.deadline,
+  }
+}
+
 export function createProject(input) {
+  const profile = buildProfile(input)
   return {
     version: PROJECT_VERSION,
     id: newId(),
     createdAt: new Date().toISOString(),
+    // İlk tahminin anlık görüntüsü.
+    //
+    // Profil sonradan değişir: kaldıraç kapsamı küçültür, tarih ertelenir,
+    // asistan eklenir. O yüzden post-mortemde "ilk tahmin buydu" demek
+    // ancak burada saklanırsa doğru olur. Eski projelerde bu alan yok ve
+    // arayüz bunu gizlemek yerine söyler.
+    baseline: {
+      requiredHours: requiredHours(profile),
+      at: new Date().toISOString(),
+    },
     name: input.name,
     status: 'aktif',
-    profile: {
-      genreId: input.genreId,
-      scaleId: input.scaleId,
-      experienceId: input.experienceId,
-      engineId: input.engineId,
-      artId: input.artId,
-      teamId: input.teamId,
-      multiplayerId: input.multiplayerId || 'tek',
-      platformId: input.platformId || 'pc',
-      aiTools: input.aiTools || {},
-      aiCosts: input.aiCosts || {},
-      otherMonthlyCost: input.otherMonthlyCost || 0,
-      oneTimeCost: input.oneTimeCost || 0,
-      // Mağaza varsayılanı platformdan türetilir: mobil bir projede Steam'i
-      // varsayılan yapmak, yanlış pay ve yanlış kayıt ücretiyle hesap
-      // yapmak demekti.
-      storeId:
-        input.storeId ||
-        findOption(PLATFORM_TARGETS, input.platformId || 'pc').stores[0],
-      revenue: {},
-      // Mağaza başına kayıt ücreti ve ne zaman kontrol edildiği.
-      // Tek alan olduğunda mağaza değişince yanlış tutar taşınıyordu.
-      storeFees: {},
-      storeFeeCheckedAt: {},
-      engineName: input.engineName || '',
-      // Sürdürülebilir günlük tavan bu cevaptan türetiliyor. Eski
-      // kayıtlarda yok, estimate.js varsayılana düşüyor.
-      commitmentId: input.commitmentId || 'yan',
-      dailyMinutes: input.dailyMinutes,
-      daysPerWeek: input.daysPerWeek,
-      deadline: input.deadline,
-    },
+    profile,
     currentPhaseId: 'konsept',
     doneSteps: {},
     doneDeliverables: {},

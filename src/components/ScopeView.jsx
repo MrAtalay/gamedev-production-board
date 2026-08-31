@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Icon from './Icon.jsx'
 import { phaseIndex } from '../data/phases.js'
 import { computeEstimate } from '../lib/estimate.js'
+import { duzeltilmisKalan } from '../lib/tempo.js'
 
 function AddRow({ placeholder, onAdd, disabled }) {
   const [text, setText] = useState('')
@@ -35,6 +36,9 @@ export default function ScopeView({ project, actions }) {
   const estimate = computeEstimate(project.profile)
   const scopeLocked = phaseIndex(project.currentPhaseId) >= phaseIndex('uretim')
   const outCount = project.scope.out.length
+  // Ölçülen sapmaya göre düzeltilmiş kalan süre. Yeterli veri yoksa null
+  // döner ve bu bölüm hiç gösterilmez.
+  const olculen = duzeltilmisKalan(project)
 
   return (
     <div>
@@ -75,6 +79,29 @@ export default function ScopeView({ project, actions }) {
             : ' Kapsam süreye sığıyor.'}
         </p>
       </div>
+
+      {olculen && (
+        <div className="card card-tight">
+          <div className="spread">
+            <span className="small muted">Ölçülen tempona göre</span>
+            <span className={'chip ' + (olculen.sigiyorMu ? 'chip-good' : 'chip-bad')}>
+              {olculen.sigiyorMu ? 'Sığıyor' : 'Sığmıyor'}
+            </span>
+          </div>
+          <p className="small" style={{ marginTop: 10 }}>
+            Yukarıdaki sayı tahmine dayanıyor. Bu sayı ise senin kendi kaydına:
+            biten fazlarda tahminlerin {olculen.katsayi} katına çıktı. Aynı oran
+            devam ederse kalan {olculen.kalanTahminSaat} saatlik iş gerçekte
+            yaklaşık <strong>{olculen.duzeltilmisSaat} saat</strong> sürer.
+            Elindeki süre {olculen.eldekiSaat} saat.
+          </p>
+          <p className="tiny muted" style={{ marginTop: 8 }}>
+            {olculen.sigiyorMu
+              ? 'Ölçülen tempoyla kapsam süreye sığıyor. Bu, tahmine değil kendi verine dayanan bir sonuç.'
+              : 'Ölçülen tempoyla kapsam süreye sığmıyor. Aşağıdaki kaldıraçlar bu farkı kapatmak için var.'}
+          </p>
+        </div>
+      )}
 
       <div className="card">
         <div className="card-head">

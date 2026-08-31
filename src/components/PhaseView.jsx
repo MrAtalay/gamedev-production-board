@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Icon from './Icon.jsx'
 import NumberField from './NumberField.jsx'
 import { totalContentUnits } from '../lib/content.js'
+import PostmortemSummary from './PostmortemSummary.jsx'
 import { PHASES } from '../data/phases.js'
 import {
   phaseDeliverables,
@@ -251,6 +252,8 @@ export default function PhaseView({ project, phaseId, actions, goTo }) {
           </ul>
         </div>
       )}
+
+      {phase.id === 'postmortem' && <PostmortemSummary project={project} />}
 
       {deliverables.map((deliverable) => (
         <DeliverableCard

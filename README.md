@@ -79,6 +79,8 @@ Sonra tarayıcıda `http://localhost:5173/` adresine gidilir.
 ```
 npm run build     # üretim derlemesi
 npm run lint      # oxlint
+npm test          # hesap katmanı kontrolleri
+npm run tek-dosya # tek HTML dosyası olarak derleme (pano.html)
 ```
 
 ## Veri
@@ -100,6 +102,7 @@ src/
     money.js       başabaş noktası ve satış senaryoları
     rates.js       döviz kuru (isteğe bağlı, çevrimdışı çalışır)
     project.js     proje modeli, ilerleme, seri, bugünün işi
+    tempo.js       haftalık özet, faz bazlı gerçek süre, sapma katsayısı
     gates.js       otomatik kapı doğrulayıcıları
     storage.js     localStorage ve dışa aktarma
   components/      arayüz bileşenleri

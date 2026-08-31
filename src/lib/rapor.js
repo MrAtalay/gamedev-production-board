@@ -159,7 +159,7 @@ export function durumFoyu(project) {
             return f.label + ': ' + v
           })
           .filter(Boolean)
-        L.push('- **' + i.name + '**' + (alanlar.length ? ' — ' + alanlar.join(', ') : ''))
+        L.push('- **' + i.name + '**' + (alanlar.length ? ' (' + alanlar.join(', ') + ')' : ''))
       })
       L.push('')
     })

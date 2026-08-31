@@ -120,6 +120,43 @@ export const REVENUE_DEFAULTS = {
 // Kullanıcıya doğrulaması gerektiği açıkça söylenen alanlar.
 export const MUST_VERIFY = ['withholdingRate', 'incomeTaxRate']
 
+// Piyasa gerçekliği.
+//
+// Beklenen satış adedi kullanıcının kendi tahminidir ve sistem bu sayıya
+// bugüne kadar hiç itiraz etmiyordu: 50.000 yazılsa da sessizce hesaplıyordu.
+// Bu, aracın "sistem doğruyu söyler" kuralına aykırıydı. Kapsam sığmıyorsa
+// söylüyorsak, satış beklentisi piyasanın çok üstündeyse de söylenmeli.
+//
+// Buradaki sayılar da eskir, o yüzden ücretlerdeki gibi tarihi yazılı ve
+// arayüz doğrulanması gerektiğini söylüyor. Bu bir hedef değil, bir
+// dağılımın ortancasıdır: yorumu kullanıcıya bırakılır.
+export const MARKET_KNOWN_AS_OF = '2026-08'
+export const MARKET_STALE_MONTHS = 12
+
+export const MARKET_REALITY = {
+  // Ortanca brüt gelir: yayınlanan oyunların yarısı bunun altında kalıyor.
+  // Mağaza payı ve vergiler kesilmeden ÖNCEki tutardır.
+  medianGrossUsd: 249,
+  releasesPerYear: 20282,
+  reachedThousandReviews: 608,
+  year: 2025,
+  store: 'Steam',
+  source: 'Video Game Insights, 2025 Steam yılı verisi',
+  knownAsOf: MARKET_KNOWN_AS_OF,
+}
+
+// Kullanıcının beklentisi ortancanın kaç katı.
+// Ortanca yoksa hesap yapılmaz, sayı uydurulmaz.
+export function marketComparison(expectedGrossUsd) {
+  const m = MARKET_REALITY.medianGrossUsd
+  if (!m || m <= 0 || !expectedGrossUsd || expectedGrossUsd <= 0) return null
+  return {
+    medianGrossUsd: m,
+    kat: Math.round((expectedGrossUsd / m) * 10) / 10,
+    ustunde: expectedGrossUsd > m,
+  }
+}
+
 export const REVENUE_FIELDS = [
   {
     key: 'price',

@@ -3,6 +3,8 @@ import Icon from './Icon.jsx'
 import { formatDate } from '../lib/estimate.js'
 import { totalLoggedMinutes, streakInfo } from '../lib/project.js'
 import { durumFoyu, parseRapor, raporFarki } from '../lib/rapor.js'
+import WeekSummary from './WeekSummary.jsx'
+import PhaseCompare from './PhaseCompare.jsx'
 
 const HISTORY_DAYS = 35
 
@@ -77,6 +79,10 @@ export default function JournalView({ project, actions, toast }) {
           <div className="number-label">gün üst üste</div>
         </div>
       </div>
+
+      <WeekSummary project={project} />
+
+      <PhaseCompare project={project} />
 
       <div className="card">
         <div className="card-head">

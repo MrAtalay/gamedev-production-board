@@ -1,5 +1,382 @@
 # Proje Panosu: Durum Notu
 
+## Piyasa vaka çalışması (31 Ağustos 2026, araştırma, karar verilmedi)
+
+Kullanıcı son dönemde tutan oyunları örnek verdi ve araştırılmasını istedi.
+Beş oyun incelendi. Amaç bir başarı formülü çıkarmak değil, **ölçek
+kalibrasyonu**: bin yorum bandına ulaşan bir oyunun gerçekte ne kadar büyük
+olduğunu görmek.
+
+### İncelenen beş oyun
+
+| Oyun | Ekip | Fiyat | Süre veya döngü | Yorum | Gizli kaldıraç |
+|---|---|---|---|---|---|
+| Meccha Chameleon | 2 kişi | 6 dolar | 2 ay geliştirme | 42.293, %90 | görünmüyor |
+| Megabonk | 1 kişi | 8-10 dolar | belirsiz | 14.900, %94 | görünmüyor |
+| How to Fish | 2 kişi | 5 dolar | belirsiz | ~13.000, %94 | **Landfall desteği** |
+| Servant of the Lake | stüdyo | orta | 4-6 saat | 1.274, %98 | **var olan seri kitlesi** |
+| Sort Them Ducks | küçük | düşük | 4-8 saat | 1.123, %91 | görünmüyor |
+
+Rakamlar Ağustos 2026 sonu itibarıyla. Son üçü o ay çıktığı için yorum
+sayıları hâlâ artıyor, bunlar son hali değil.
+
+### İki ayrı band olduğu ortaya çıktı
+
+İlk üçü (13 bin ile 42 bin yorum) ile son ikisi (1.100 ile 1.300 yorum)
+aynı olay değil.
+
+2025'te yayınlanan 20.282 oyunun 608'i bin yoruma ulaşabilmişti. Son iki
+oyun o eşiği yeni geçmiş durumda, ilk üçü ise eşiğin 10 ila 40 katı
+üstünde.
+
+**İlk oyun için hedeflenmesi mantıklı olan band ikincisi.** Megabonk'u
+hedef almak, bu dosyada zaten yazılı olan hayatta kalan yanılgısının
+aynısı olur.
+
+### Beş vakanın ikisinde gizli kaldıraç var
+
+- How to Fish'in arkasında Evil Landfall desteği var. Landfall, Content
+  Warning ve PEAK'in arkasındaki şirket, yani viral olmayı bilen bir yapı.
+- Servant of the Lake, on yılı aşkın süredir devam eden Rusty Lake
+  serisinin yeni oyunu. Yüzde 98 ve 1.274 yorum sıfırdan gelen görünürlük
+  değil, var olan kitlenin gelmesi.
+
+Bu oran tek başına, "başarı formülü" listelerine neden güvenilmemesi
+gerektiğini gösteriyor: beş vakanın ikisinde asıl sebep listede yazmayan
+şey.
+
+**Sort Them Ducks en temiz vaka:** bilinmeyen geliştirici, tek oyun, seri
+yok, yayıncı desteği görünmüyor.
+
+### Kapsam açısından okunuşu
+
+**Sort Them Ducks: içerik hacmi ucuz çoğaltılmış.** 4.000 ördek devasa
+görünüyor ama 4.000 birimlik iş değil. Tek sıralama sistemi artı varyasyon.
+Panonun `unitHours` ve `plannedUnits` mekanizmasının yakaladığı şey tam
+olarak bu: birim süresi düşükse birim sayısı yüksek olabilir.
+
+**Servant of the Lake: birim maliyeti yüksek, toplam süre kısa.** Elle
+çizim, seslendirme, anlatı. O yüzden 4 ile 6 saat.
+
+İkisi de aynı yere varmış, farklı yoldan: kısa oyun, bitirilebilir kapsam.
+
+### Beklenmedik bulgu
+
+Sort Them Ducks'ın bilinen teknik sorunları var (yoğun sahnede kare
+düşmesi, kare hızına bağlı fare hassasiyeti, bazı oyuncularda mide
+bulantısı) ve yine de yüzde 91 almış. Oyuncuların en çok istediği şey
+daha fazla içerik, daha az hata değil.
+
+Çıkarılacak sonuç "teknik kalite önemsiz" değil. Çıkarılacak sonuç:
+çekirdek döngü tatmin ediciyse kenar sorunlar affediliyor. Panonun faz
+sıralaması zaten bunu söylüyor, prototipte hissin oturmasını istiyor.
+Bu vaka o sıralamayı destekliyor.
+
+### Son dönem hitleri panonun tezini destekliyor
+
+Bu dosyada kayıtlı "başarı formülü" listesi co-op, sandbox ve ömür boyu
+destek diyordu, panonun çarpanlarıyla ilk oyunu bitirilemez hale
+getiriyordu.
+
+İncelenen beş oyun ise küçük, ucuz, kısa ve tek fikirli. Yani son dönemin
+tutan oyunları, panonun zaten savunduğu şeyi savunuyor: kapsamı küçült.
+
+---
+
+## Tartışılan fikir: referans oyun kütüphanesi (karar verilmedi)
+
+Kullanıcının önerisi: piyasa araştırması panoya girsin, kullanıcı ölçeğine
+benzeyen bir oyunu referans alsın. "Sort Them Ducks ama yengeçlerle",
+"Megabonk ama şöyle" gibi.
+
+Ayrıca daha önce düşünülmüş bir fikir: piyasadan veri çeken, oyunları belli
+standartlara göre yorumlayıp rapor üreten dahili bir araç.
+
+### İki ayrı fikir olduğu ve birinin tehlikeli olduğu
+
+**Tehlikeli olan: tasarım referansı.** "Şu oyun şöyle başarmış, sen de
+benzerini yap" diyen bir kütüphane, bu dosyada zaten reddedilmiş olan
+hayatta kalan yanılgısını araca kodlar. Üstelik "X ama Y ile" kalıbı
+doğrudan türev oyun üretmeye teşvik eder.
+
+**Değerli olan: ölçek kalibrasyonu.** Aynı veriden çıkan ama farklı soru
+soran hali: "bin yorum bandına ulaşan bir oyun tek mekanik ve 4-8 saatti,
+senin planın altı mekanik ve 20 saat, yani dört katı."
+
+Fark şu: birincisi neyin başarı getireceğini iddia eder ve edemez.
+İkincisi sadece iki kapsamı karşılaştırır, iddiası yoktur ve
+yanlışlanabilir.
+
+Ölçek kalibrasyonu için oyunun **tutmuş olması bile gerekmiyor.** Bilinen
+büyüklükte oyun yeter. Bu, hayatta kalan yanılgısını neredeyse tamamen
+ortadan kaldırır.
+
+### Otomatik veri çekme neden çalışmaz
+
+Bu dosyada Steam fiyat API'si için yazılmış olan şey satış ve gelir verisi
+için de geçerli, hatta daha güçlü:
+
+- Steam satış ve gelir rakamları için açık API yok.
+- Yorum sayısı ve fiyat mağaza sayfasından okunabilir ama satış adedi
+  okunamaz, tahmin edilir.
+- Bu vaka çalışmasındaki rakamların kaynağı Video Game Insights ve ikincil
+  haber kaynakları. VGI ticari bir ürün.
+
+Yani "piyasadan veri çeken dahili araç" fikri, ücretli bir veri kaynağına
+bağlanmadan dürüst çalışamaz. Bağlanırsa da aracın "dış servisler isteğe
+bağlıdır" kuralına aykırı bir bağımlılık doğar.
+
+### Eğer yapılacaksa önerilen şekli
+
+Elle bakılan, tarihli, küçük bir kütüphane. Mağaza ücretlerindeki desenin
+aynısı: sayı yazılır, ne zaman doğru olduğu yazılır, arayüz eskidiğini
+söyler.
+
+Kaydedilecek alanlar ölçek odaklı olmalı: mekanik sayısı, oynanış süresi
+veya içerik birimi, ekip büyüklüğü, fiyat, geliştirme süresi, yorum sayısı,
+ve **gizli kaldıraç alanı** (yayıncı desteği, var olan seri, mevcut kitle).
+
+O son alan kritik. Onsuz kütüphane yalan söyler: How to Fish'i "iki kişi
+yaptı ve patladı" diye kaydetmek, Landfall desteğini saklamak olur.
+
+Karar verilmedi.
+
+## Veri çekme: neyin mümkün olduğu (31 Ağustos 2026, araştırıldı)
+
+Kullanıcı sordu: asistan oyunları nasıl araştırıyorsa, uygulama da Steam API
+olmadan aynısını yapamaz mı.
+
+### Asistan nasıl araştırıyor
+
+API kullanmıyor. Arama motoruna soruyor, çıkan yazıları okuyor, kaynakları
+tartıyor. Yani otomatik veri çekme değil, okuma ve yorumlama.
+
+Bu ayrım önemli: bugünkü araştırmanın en değerli çıktısı bir sayı değildi,
+How to Fish'in arkasında Landfall olduğunu ve Servant of the Lake'in on
+yıllık bir serinin devamı olduğunu fark etmekti. Hiçbir kazıyıcı bunu
+üretmez, o bilgi haber metninin içinde, tabloda değil.
+
+### Steam tarafındaki teknik durum
+
+Belgelenmemiş ama açık iki uç var, kimlik doğrulama istemiyorlar:
+
+    store.steampowered.com/appreviews/<appid>?json=1
+    store.steampowered.com/api/appdetails?appids=<appid>
+
+Birincisi yorum sayısı ve olumluluk oranı, ikincisi ad, fiyat ve çıkış
+tarihi döndürüyor.
+
+**Asıl engel API'nin olmaması değil, CORS.** Panonun sunucusu yok. Tarayıcı,
+izin vermeyen bir siteden gelen cevabı okumaya izin vermiyor. Kur servisleri
+çalışıyor çünkü açıkça izin veriyorlar (`rates.js`). Steam'in izin verip
+vermediği **doğrulanmadı**: asistanın çalıştığı ortam dış ağa çıkamadığı
+için test edilemedi.
+
+Kontrol etmenin yolu, uygulama açıkken tarayıcı konsoluna şunu yapıştırmak:
+
+    fetch('https://store.steampowered.com/appreviews/1794680?json=1&num_per_page=0')
+      .then(r => r.json()).then(d => console.log(d.query_summary))
+      .catch(e => console.log('engellendi:', e.message))
+
+### Asıl bulgu: otomatikleştirilebilenler eskiyenler
+
+CORS açık çıksa bile çekilebilecek veriler, ölçek karşılaştırması için en az
+işe yarayanlar.
+
+| Veri | Çekilebilir mi | Eskir mi |
+|---|---|---|
+| Yorum sayısı, fiyat, çıkış tarihi | muhtemelen | hızla |
+| Satış adedi ve gelir | hayır, sadece tahmin edilir | hızla |
+| Ekip büyüklüğü | hayır | asla |
+| Geliştirme süresi | hayır | asla |
+| Mekanik sayısı, oynanış süresi | hayır | asla |
+| Gizli kaldıraç | hayır | asla |
+
+Simetri şu: otomatikleştirilebilenler eskiyenler, eskimeyenler ise
+otomatikleştirilemeyenler.
+
+Yani elle girilen kütüphane bir taviz değil, doğru çözüm. Ekip büyüklüğü ve
+yayıncı desteği bir kez yazılır, hiç güncellenmez.
+
+Öneri: yorum sayısı kütüphaneye hiç konmasın. Ölçek karşılaştırması için
+gereken "kaç yorum aldı" değil, "ne kadar büyüktü".
+
+---
+
+## İlk oyun fikri: sorting oyunu (konuşuldu, karar kullanıcıda)
+
+Kullanıcı sorting oyunu yapmayı düşünüyor, kapsam bakımından zorlanmayacağını
+ve özgünlük artı içerikle ilk oyun için iyi aday olabileceğini söyledi.
+
+### Neden sağlam bir aday
+
+Yapısal sebepler, moda değil. Tek mekanik. Ağ kodu yok, yapay zeka yok,
+prosedürel üretim yok, fizik ayarı yok; yani oyunları öldüren pahalı
+sistemlerin hepsi kapsam dışı. Döngünün iyi hissettirip hissettirmediği
+günler içinde öğrenilir. Panonun `unitHours` ve `plannedUnits` mekanizması
+bu tür oyun için biçilmiş kaftan.
+
+Sort Them Ducks'ın bilinmeyen bir geliştiriciden çıkıp bin yorum bandını
+geçmesi, fikrin ulaşılabilir olduğunu gösteriyor.
+
+### Üç risk
+
+**1. İçerik hacmi ucuz hissediyor.** "4.000 ördek" kulağa bedava geliyor.
+Varlık başına 2 dakika 133 saat eder, 10 dakika 667 saat. Bu türde birim
+süresini ölçmek isteğe bağlı bir adım değil, projenin kendisi.
+
+**2. Görsel bağımlılık.** Sort Them Ducks'ın çekiciliği büyük ölçüde ördek
+tasarımlarında; teknik sorunlarına rağmen yüzde 91 almasının sebebi bu.
+Ucuza sevimli varyasyon üretilemiyorsa değer önerisi çöker. Dikey dilimde
+sınanmalı: yirmi tane yap, birine göster, sevimli buluyor mu.
+
+**3. Kalabalık.** Sort Them Ducks'tan sonra tür hızla doldu. Bir trende on
+iki ay geç kalmak gerçek bir görünürlük sorunu.
+
+### Sıralamaya itiraz
+
+Kullanıcının ifadesi "özgünlük eklendi ve içerik arttı mı iyi olur" idi.
+Kapsam tam olarak buradan ölür.
+
+Doğru sıra tersi: önce döngüyü en az içerikle kanıtla, sonra **ölçülmüş bir
+tavana kadar** içerik ekle. Panonun dikey dilim fazı zaten bunun için var.
+
+Özgünlük de sonradan eklenen bir katman değil, çekirdek döngünün içinde
+olmalı. Meccha Chameleon'un özgünlüğü "prop hunt artı şu" değil, saklanmak
+için kendini boyaman; mekaniğin kendisi.
+
+### Sıradaki adım
+
+Fikri tartışmak yerine panoya sormak. Sihirbaz sorting oyunu fikriyle
+doldurulacak, tür Bulmaca veya Simülasyon seçilecek, gerçek süre girilecek.
+Bu aynı zamanda aracın ilk gerçek sınavı olacak: v3.3'te eklenen ölçülen
+tempo ve piyasa çıpası kendi projesinde işe yarıyor mu.
+
+---
+
+## Ne yapıldı (v3.3: zaman gerçekliği ve piyasa çıpası)
+
+31 Ağustos 2026. "Sırada ne var" listesindeki dört madde de kapatıldı, üstüne
+bütçe ekranına bir gerçeklik çıpası eklendi.
+
+### Yeni hesap katmanı: `src/lib/tempo.js`
+
+Dört maddenin hepsi aynı soruya bakıyordu: zaman nereye gitti. Hesapları tek
+dosyada topladım, görünümler oradan besleniyor.
+
+Önemli olan şu: **veri modeli değişmedi.** Çalışma oturumu zaten `stepId`
+tutuyordu, adım da teslimata, teslimat da faza bağlı. Yani faz bilgisi
+türetilebiliyordu, kaydedilmesine gerek yoktu. Türe özel teslimatların
+adımları da eşlemeye dahil.
+
+94 adımın kimliğinin fazlar arasında benzersiz olduğu kontrol edildi, eşleme
+bu yüzden güvenli.
+
+### 1. Haftalık özet
+
+Günlük ekranının başına eklendi. Bu haftanın toplamı, haftalık plan
+(günlük dakika kere haftalık gün), günlere dağılım ve son dört haftanın
+karşılaştırması.
+
+Gerçeklik katsayısı burada uygulanmıyor. Katsayı kapasite planlaması içindir;
+"bu hafta ne kadar çalıştım" sorusunun cevabı ham sayıdır. İkisini karıştırmak
+kullanıcıya yanlış sayı göstermek olurdu.
+
+Ton kuralı gereği eksik hafta suçlanmıyor: sayı gösteriliyor ve kalan farkın
+ne kadar olduğu yazılıyor.
+
+### 2. Faz bazlı tahmin ve gerçek
+
+Aynı ekranda, haftalık özetin altında.
+
+En önemli karar: **sapma yalnızca kapısı geçilmiş fazda gösteriliyor.** Devam
+eden bir fazda tahminin altında kalmak iyi haber değildir, sadece işin
+bitmemiş olmasıdır. Bunu "iyi gidiyorsun" diye göstermek sistemin kendi
+kuralını çiğnemesi olurdu.
+
+Adıma bağlanmamış kayıtlar gizlenmiyor, ayrı kalem olarak yazılıyor. Nereye
+gittiği bilinmeyen süreyi dağıtıma karıştırmak sayıyı yanlış yapardı.
+
+Sapma katsayısı için **en az iki bitmiş faz** şartı var. Tek fazdan çıkarılan
+katsayı, olmayan bir katsayıdan daha yanıltıcıdır.
+
+### 3. Post-mortem otomatik karşılaştırması
+
+Post-mortem fazına girildiğinde, teslimatların üstünde hesaplanmış
+karşılaştırma görünüyor. Aritmetiği sistem yapıyor, yorumu kullanıcı:
+"bir sonraki projede ne değişecek" sorusu teslimatın asıl işi ve orada
+kalıyor.
+
+**Yol boyunca çıkan sorun:** teslimat "ilk tahminle karşılaştır" diyor ama
+ilk tahmin hiçbir yerde saklanmıyordu. Profil sonradan değişiyor (kaldıraç
+kapsamı küçültür, tarih ertelenir), yani `computeEstimate` şu anki tahmini
+verir, ilk tahmini değil.
+
+İki parçalı çözüldü:
+- Yeni projelerde `project.baseline` alanına ilk tahmin ve tarihi yazılıyor.
+- Eski projelerde bu alan yok ve arayüz bunu gizlemiyor: "bu proje ilk tahmin
+  kaydedilmeden önce açılmış, aşağıdaki şu anki tahmindir" diyor.
+
+`createProject` içindeki profil nesnesi `buildProfile` fonksiyonuna çıkarıldı,
+çünkü ilk tahmini hesaplamak için profile projeden önce ihtiyaç var.
+
+### 4. Arşiv ayrıntısı
+
+Arşivdeki her proje artık açılabiliyor: kayıtlı saat, çalışılan gün, geçilen
+kapı, sapma katsayısı, profil özeti, oyun tanımı, faz karşılaştırması, kayıt
+sayıları, post-mortem metni ve ilk sekiz karar.
+
+Aynı anda tek proje açık kalıyor, liste uzayınca hepsi birden açık olması
+okunmaz hale getiriyordu.
+
+### Üstüne: piyasa çıpası (bütçe ekranı)
+
+Beklenen satış adedi kullanıcının kendi tahmini ve sistem bu sayıya bugüne
+kadar hiç itiraz etmiyordu. 50.000 satış yazılsa sessizce hesaplıyordu.
+
+Bu, aracın kendi kuralına aykırıydı: kapsam sığmadığında söylüyorsak, satış
+beklentisi piyasanın çok üstünde olduğunda da söylenmeli.
+
+`publishing.js` içine `MARKET_REALITY` eklendi: 2025 Steam yılında yayınlanan
+oyunların ortanca brüt geliri 249 dolar, o yıl 20.282 oyun yayınlandı ve
+bunların 608 tanesi bin yoruma ulaştı. Kaynak Video Game Insights.
+
+Ücretlerdeki desen aynen izlendi: sayının bilindiği tarih yazılı ve arayüz
+doğrulanmasını istiyor. Bunun bir hedef değil bir dağılımın ortancası olduğu
+açıkça yazıyor, çünkü ortalamanın üstünde olmak imkansız değil, varsayılan
+değil.
+
+### Ölçülen tempo, kapsam ekranına da taşındı
+
+Kapsam ekranındaki "gereken saat, elindeki saat" karşılaştırması tahmine
+dayanıyor. Yeterli veri varsa (en az iki bitmiş faz) hemen altına ölçülen
+gerçeğe dayanan ikinci bir karşılaştırma geliyor: kendi sapma katsayınla
+düzeltilmiş kalan süre.
+
+Bu, aracın `unitMath` yorumundaki ilkeyle aynı: ölçülen gerçek, tahminden
+daha güvenilirdir.
+
+### Test
+
+`scripts/tempo-testi.mjs` ve `npm test`. Arayüz testi hala yok ama hesap
+katmanının 18 kontrolü var: hafta başının pazartesi olması, faz dağılımı,
+adıma bağlanmamış sürenin ayrı tutulması, faz bitmeden sapma verilmemesi,
+tek fazda katsayı verilmemesi.
+
+Test yazarken bir şey yakalandı ve bu not edilmeye değer: ilk çalıştırmada
+dört kontrol kaldı, sebebi kütüphane değil testin kendisiydi. Test
+`toISOString` kullanıyordu, o da UTC'ye çeviriyor ve UTC+3'te yerel gece
+yarısı bir önceki güne düşüyordu. Kütüphane baştan yerel tarih kullanıyordu.
+Tarih karşılaştıran her yerde bu tuzak var.
+
+### Düzeltilen kural ihlali
+
+`src/lib/rapor.js` içinde rapor çıktısı üretilirken em dash kullanılıyordu.
+Kurallar em dash yasaklıyor ve bu metin dışa aktarılan rapora gidiyor.
+Alanlar zaten iki nokta kullandığı için parantez tercih edildi.
+
+---
+
 ## Büyük konu: görünürlük ekseni (konuşuldu, karar verilmedi)
 
 28 Ağustos 2026'da konuşulmaya başlandı. **Hızlı geçilmeyecek konu**,
@@ -1317,11 +1694,19 @@ bileşeninde de vardı. İkisine de `color: var(--text)` eklendi ve bu durum
 
 ## Sırada ne var (henüz konuşulmadı)
 
-- Post-mortem fazında, kaydedilen gerçek saatlerin ilk tahminle otomatik
-  karşılaştırılması (şu an kullanıcı elle yapıyor)
-- Faz bazlı harcanan saatin ölçülüp tahminle karşılaştırılması
-- Arşivdeki projelerin ayrıntılı görüntülenmesi (şu an sadece listeleniyor)
-- Haftalık özet: bu hafta kaç saat, hedefin neresindesin
+Bu bölümdeki dört madde 31 Ağustos 2026'da yapıldı, ayrıntısı en üstteki
+v3.3 bölümünde. Yeni maddeler buraya yazılacak.
+
+Yapılırken ortaya çıkan ve karara bağlanmayan konular:
+
+- Adıma bağlanmamış süre kayıtları faz dağılımına giremiyor. Sayaç her zaman
+  bir adıma bağlı çalıştığı için bu sürenin kaynağı çoğunlukla elle girilen
+  kayıtlar ve rapor içe aktarımı. Elle kayıt girerken faz seçtirmek bir
+  seçenek, ama sürtünme ekler.
+- Faz tahmini `sharePercent` ile toplam saatten dağıtılıyor. Bu yüzdeler
+  sabit ve türe göre değişmiyor. Bir anlatı oyununda ön üretimin payı
+  gerçekte daha büyük olabilir. Ölçülen veri biriktikçe bu yüzdelerin
+  doğruluğu sınanabilir hale gelecek.
 
 ## Devam ederken hatırlanacaklar
 

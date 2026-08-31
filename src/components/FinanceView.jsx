@@ -4,6 +4,7 @@ import NumberField from './NumberField.jsx'
 import { REVENUE_FIELDS, storesFor } from '../data/publishing.js'
 import { PLATFORM_TARGETS, findOption } from '../data/options.js'
 import { breakEven, scenarios, revenueSettings, findStore, storeFeeInfo } from '../lib/money.js'
+import { MARKET_REALITY, marketComparison } from '../data/publishing.js'
 import { CURRENCIES, fetchRate, loadCachedRate } from '../lib/rates.js'
 
 function money(value, rate, currency) {
@@ -378,6 +379,35 @@ export default function FinanceView({ project, actions }) {
             {be.expectedProfit} dolar.
           </div>
         </div>
+
+        {(() => {
+          // Beklenen brüt geliri piyasanın ortancasıyla karşılaştır.
+          // Amaç caydırmak değil, sayıyı bağlamına oturtmak: kullanıcı
+          // 50.000 satış yazdığında sistemin sessiz kalması, kapsam
+          // sığmadığında sessiz kalmasıyla aynı hata olurdu.
+          const kiyas = marketComparison(be.grossAtExpected)
+          if (!kiyas) return null
+          return (
+            <div className="hint-box">
+              Beklediğin brüt gelir {be.grossAtExpected} dolar.{' '}
+              {MARKET_REALITY.year} yılında {MARKET_REALITY.store} üzerinde
+              yayınlanan oyunların ortanca brüt geliri{' '}
+              <strong>{kiyas.medianGrossUsd} dolar</strong> idi, yani yayınlanan
+              oyunların yarısı bunun altında kaldı. Senin beklentin bu ortancanın{' '}
+              <strong>{kiyas.kat} katı</strong>.
+              {' '}O yıl {MARKET_REALITY.releasesPerYear.toLocaleString('tr-TR')} oyun
+              yayınlandı ve bunların {MARKET_REALITY.reachedThousandReviews} tanesi
+              bin yoruma ulaştı.
+              <br />
+              <span className="tiny muted">
+                Kaynak: {MARKET_REALITY.source}. Sistemin bildiği tarih{' '}
+                {MARKET_REALITY.knownAsOf}. Bu bir hedef değil, bir dağılımın
+                ortancası: ortalamanın üstünde olmak imkansız değil, varsayılan
+                değil. Sayının güncelliğini kontrol et.
+              </span>
+            </div>
+          )
+        })()}
 
         <div className="hint-box">
           Bu projeye {be.requiredHours} saat harcayacaksın. Beklentin gerçekleşirse

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import Icon from './Icon.jsx'
 import NumberField from './NumberField.jsx'
+import ArchiveDetail from './ArchiveDetail.jsx'
 import { computeEstimate, formatDate } from '../lib/estimate.js'
 import { GENRES, findGenre } from '../data/genres.js'
 import {
@@ -33,6 +34,9 @@ const PROFILE_FIELDS = [
 export default function SettingsView({ project, archive, actions }) {
   const fileRef = useRef(null)
   const [confirmNew, setConfirmNew] = useState(false)
+  // Arşivde açık olan projenin kimliği. Aynı anda tek proje açılır,
+  // liste uzayınca hepsi birden açık olursa okunmaz hale geliyordu.
+  const [acikArsiv, setAcikArsiv] = useState(null)
   // İçe aktarma iki adımlı: dosya seçilince önce karşılaştırma gösterilir.
   const [pendingImport, setPendingImport] = useState(null)
 
@@ -427,22 +431,38 @@ export default function SettingsView({ project, archive, actions }) {
             <span className="chip">{archive.length} proje</span>
           </div>
           <ul className="item-list">
-            {archive.map((p) => (
-              <li key={p.id} className="item alt">
-                <div className="item-body">
-                  <div className="item-title">{p.name}</div>
-                  <div className="item-sub">
-                    {p.status === 'durduruldu' ? 'Durduruldu' : 'Tamamlandı'}
-                    {p.archivedAt && ', ' + formatDate(p.archivedAt.slice(0, 10))}
-                  </div>
-                  {p.killReason && (
-                    <div className="item-sub" style={{ marginTop: 4 }}>
-                      Sebep: {p.killReason}
+            {archive.map((p) => {
+              const acik = acikArsiv === p.id
+              return (
+                <li key={p.id} className="item alt">
+                  <div className="item-body">
+                    <div className="spread">
+                      <div>
+                        <div className="item-title">{p.name}</div>
+                        <div className="item-sub">
+                          {p.status === 'durduruldu' ? 'Durduruldu' : 'Tamamlandı'}
+                          {p.archivedAt && ', ' + formatDate(p.archivedAt.slice(0, 10))}
+                        </div>
+                        {p.killReason && (
+                          <div className="item-sub" style={{ marginTop: 4 }}>
+                            Sebep: {p.killReason}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        className="btn btn-sm btn-ghost"
+                        onClick={() => setAcikArsiv(acik ? null : p.id)}
+                        aria-expanded={acik}
+                      >
+                        <Icon name={acik ? 'chevronUp' : 'chevronDown'} size={14} />
+                        {acik ? 'Kapat' : 'Ayrıntı'}
+                      </button>
                     </div>
-                  )}
-                </div>
-              </li>
-            ))}
+                    {acik && <ArchiveDetail project={p} />}
+                  </div>
+                </li>
+              )
+            })}
           </ul>
         </div>
       )}
