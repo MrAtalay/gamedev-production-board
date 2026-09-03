@@ -1,0 +1,45 @@
+#!/bin/sh
+# Push'tan once lint, testler ve derleme calisir. Kirmizi ise push iptal olur.
+#
+# NICIN VAR: uc mekanizma da zaten vardi (oxlint, tempo-testi, kural-testi,
+# vite build) ama calistirmak gelistiricinin hafizasina bagliydi. Bir
+# mekanizmanin varligi ile zorunlu olmasi ayri seyler.
+#
+# CI dosyasi (.github/workflows/ci.yml) ayni isi GitHub tarafinda yapiyor ama
+# su an calismiyor: hesap faturalandirma nedeniyle kilitli, isler hic
+# baslamiyor. Bu kanca, o kilit acilana kadar korumayi yerelde sagliyor.
+# Kilit acilinca ikisi birlikte calisir, biri digerinin yerine gecmez.
+#
+# KURULUM (her makinede bir kez):
+#     git config core.hooksPath .githooks
+# Bu klasor depoda takipli oldugu icin baska bir makinede de tek komutla ayni
+# koruma alinir. .git/hooks icine konsaydi hicbir yere gitmezdi.
+#
+# BILINCLI ATLAMAK ICIN:
+#     git push --no-verify
+# Kanca atlanabilir, CI atlanamaz. Aradaki fark bir basamak: kanca otomatik
+# ama atlanabilir, CI kapisi atlanamaz.
+
+set -e
+
+kok=$(git rev-parse --show-toplevel)
+cd "$kok"
+
+# npm bulunamazsa sessizce gecme. Calismayan bir koruma, korumus gibi
+# gorunmemeli.
+if ! command -v npm >/dev/null 2>&1; then
+  echo "pre-push: npm bulunamadi, kontroller calistirilamadi."
+  echo "pre-push: PATH'i kontrol et. Bilerek atlamak icin: git push --no-verify"
+  exit 1
+fi
+
+echo "pre-push: lint"
+npm run lint
+
+echo "pre-push: testler (tempo ve kural)"
+npm test
+
+echo "pre-push: derleme"
+npm run build
+
+echo "pre-push: tamam"

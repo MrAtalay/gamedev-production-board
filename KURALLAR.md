@@ -118,6 +118,25 @@ Yeni bir kural eklerken sor: mekanik olarak doğrulanabilir mi? Doğrulanabilir
 ise teste yaz, buraya sadece gerekçesini. Doğrulanamıyorsa burada kalır ve
 niçin kalmak zorunda olduğu da yazılır.
 
-`.github/workflows/ci.yml` lint, test ve derlemeyi her itmede çalıştırıyor.
-Dosyanın kendisi tek başına bir kapı değil, alarm: engelleyici olması için
-GitHub'da branch protection açılması gerekiyor, o ayar henüz yapılmadı.
+### Makine kurulumu, bir kez
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Bu komut olmadan `pre-push` kancası çalışmaz. Kanca push'tan önce lint, test
+ve derlemeyi çalıştırıp kırmızıysa push'u iptal ediyor. Kancalar `.git/hooks`
+içinde takip edilmediği için depoda `.githooks/` klasöründe duruyor; komut
+git'e oraya bakmasını söylüyor. Bilerek atlamak için `git push --no-verify`.
+
+### CI şu anda çalışmıyor
+
+`.github/workflows/ci.yml` aynı işi GitHub tarafında yapıyor, ama hesap
+faturalandırma nedeniyle kilitli ve işler hiç başlamıyor. Dosya yerinde
+duruyor, kilit açılınca değişiklik gerekmeden çalışacak.
+
+Bugün koruyan şey kanca. **Repoda CI dosyası görüp korunduğunu varsayma.**
+
+Kanca CI'ın yerine geçmiyor, altında duruyor. CI'ın üç fazlası var: atlanamaz,
+temiz ortamda `npm ci` ile kurulur (commit edilmemiş dosyayı ancak o yakalar),
+ve kurulum yapmayan bir makinede de çalışır.
