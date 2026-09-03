@@ -15,8 +15,16 @@
 name: CI
 
 on:
+  # Dal filtresi BILEREK yok: CI her dalda calismali.
+  #
+  # Ilk halinde belirli dal adlari sayiliyordu ve calisilan dal listede
+  # olmadigi icin hic calisma baslamadi. Sessiz basarisizlik: dosya deponun
+  # icindeydi, sozdizimi dogruydu, sadece tetikleyici eslesmiyordu.
+  #
+  # Calisma bicimi "dala it, CI yesilse main'e al" oldugu icin dogrulamanin
+  # gerektigi yer tam da main disindaki dallar. Dal adi saymak, her yeni dalda
+  # ayni tuzagi kurar.
   push:
-    branches: [main, tempo-icerik-ve-asistan-protokolu]
   pull_request:
     branches: [main]
 
