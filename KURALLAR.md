@@ -85,3 +85,39 @@ Bu proje bir planlama aracı değil, bir disiplin aracı. Metinler buna göre ya
 - Klasör adlandırma deseni: `N. Proje Adı` (Türkçe, numaralı).
 - Bu bilgisayara kurulan geliştirme araçları 30 gün sonunda kaldırılacak. Hangi
   araçların kurulduğu ilgili projenin `NOTES.md` dosyasında belirtilir.
+
+## Kuralların zorlanması
+
+Bu dosyadaki bir kural, yazılı olduğu için tutulmuyor. Biri onu hatırladığı
+sürece tutuluyor. Aradaki fark, kural ihlal edilene kadar görünmez.
+
+Bu yüzden mekanik olarak doğrulanabilen maddeler `scripts/kural-testi.mjs`
+içine taşındı ve `npm test` ile çalışıyor:
+
+- Emoji kullanılmaz
+- Em dash kullanılmaz
+- `alert()` ve `confirm()` kullanılmaz
+
+Üçü de bu test yazıldığında zaten eksiksiz tutuluyordu. Testin işi düzeltmek
+değil, durumu korumak. Kusur kasten enjekte edilip testin gerçekten kırıldığı
+doğrulandı: geçen ama kırılamayan bir test, tören.
+
+Kalan maddeler bilinçli olarak testsiz:
+
+- **Buton rengi kuralı.** `index.css` içinde temel bir `button` bloğu var ve
+  pek çok seçici rengi kaskadla oradan alıyor. Bir seçicinin rengi gerçekten
+  alıp almadığını statik olarak anlamak CSS kaskadını yeniden hesaplamayı
+  gerektiriyor, yaklaşık bir tarama yanlış pozitif üretir.
+- **Ton kuralları.** İnsan yargısı gerektiriyor, mekanik olarak ölçülemez.
+
+Yanlış pozitif üreten test, testsizlikten kötüdür: birkaç kez boşuna
+kırıldığında kimse bakmaz ve gerçek bulgu araya karışır. Bu iki madde gözden
+geçirmede insan tarafından kontrol edilir.
+
+Yeni bir kural eklerken sor: mekanik olarak doğrulanabilir mi? Doğrulanabilir
+ise teste yaz, buraya sadece gerekçesini. Doğrulanamıyorsa burada kalır ve
+niçin kalmak zorunda olduğu da yazılır.
+
+`.github/workflows/ci.yml` lint, test ve derlemeyi her itmede çalıştırıyor.
+Dosyanın kendisi tek başına bir kapı değil, alarm: engelleyici olması için
+GitHub'da branch protection açılması gerekiyor, o ayar henüz yapılmadı.

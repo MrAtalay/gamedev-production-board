@@ -1,0 +1,63 @@
+# Surekli entegrasyon: lint, test ve derleme her itmede calisir.
+#
+# Nicin var: uc mekanizma da zaten vardi (oxlint, tempo-testi, vite build) ama
+# ucunu de calistirmak gelistiricinin hafizasina bagliydi. Bir mekanizmanin
+# VARLIGI ile ZORUNLU olmasi ayri seyler. Bu dosya ikincisini sagliyor.
+#
+# ONEMLI: Bu dosya tek basina bir kapi degil, yalnizca bir alarmdir.
+# Gercekten engelleyici olmasi icin GitHub'da branch protection acilmali:
+#   Settings > Branches > Add rule > main
+#   "Require status checks to pass before merging" isaretlenip asagidaki
+#   isler secilmeli.
+# O ayar yapilmadan kirmizi CI yalnizca kirmizi bir tik olarak kalir ve
+# birlestirme engellenmez.
+
+name: CI
+
+on:
+  push:
+    branches: [main, tempo-icerik-ve-asistan-protokolu]
+  pull_request:
+    branches: [main]
+
+# Ayni dala arka arkaya itme yapilirsa eskisini iptal et. Yalnizca en son
+# commit'in sonucu anlamli.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  kontrol:
+    name: lint, test ve derleme
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # 20 = LTS. Yerelden daha eski bir surumde tutmak, yalnizca yeni
+          # Node'da calisan sozdiziminin fark edilmeden girmesini engelliyor.
+          node-version: '20'
+          cache: npm
+
+      # npm ci, npm install degil. Farki onemli: ci, package-lock.json'i
+      # birebir kurar ve lock ile package.json celisirse hata verir. install
+      # ise lock'u sessizce gunceller, boylece CI'da yerelde olmayan bir
+      # bagimlilik surumu calisabilir ve "bende calisiyordu" dogar.
+      - name: bagimliliklar
+        run: npm ci
+
+      - name: lint
+        run: npm run lint
+
+      # npm test iki betigi birden calistiriyor: tempo-testi (hesap
+      # dogrulamalari) ve kural-testi (KURALLAR.md kilidi). Ikisi de kusurda
+      # sifirdan farkli cikis kodu donuyor, yani CI gercekten kirilir.
+      - name: testler
+        run: npm test
+
+      # Derleme, testlerin yakalayamadigi bir sinifi yakaliyor: bozuk JSX,
+      # cozulemeyen import, sozdizimi hatasi. Kural testi dosyalari metin
+      # olarak okuyor, calistirmiyor.
+      - name: derleme
+        run: npm run build
