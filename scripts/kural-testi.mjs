@@ -54,7 +54,7 @@ const goreli = (p) => path.relative(kok, p).split(path.sep).join('/')
 function tara(desen) {
   const bulgular = []
   for (const dosya of hepsi) {
-    const satirlar = fs.readFileSync(dosya, 'utf8').split('\n')
+    const satirlar = fs.readFileSync(dosya, 'utf8').split(/\r?\n/)
     satirlar.forEach((satir, i) => {
       desen.lastIndex = 0
       const esl = satir.match(desen)
@@ -95,7 +95,7 @@ console.log('3. Tarayici diyaloglari kullanilmaz')
 const cagriBulgu = []
 for (const dosya of hepsi) {
   if (!['.js', '.jsx', '.mjs', '.html'].includes(path.extname(dosya))) continue
-  fs.readFileSync(dosya, 'utf8').split('\n').forEach((satir, i) => {
+  fs.readFileSync(dosya, 'utf8').split(/\r?\n/).forEach((satir, i) => {
     const kirpik = satir.trim()
     if (kirpik.startsWith('//') || kirpik.startsWith('*') || kirpik.startsWith('/*')) return
     if (/(?:^|[^.\w])(?:window\.)?(alert|confirm)\s*\(/.test(satir)) {
