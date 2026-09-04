@@ -1243,6 +1243,22 @@ Bu, aracın önlemek için yazıldığı kalıbın ta kendisi: oyunu yapmak yeri
 oyunu yapmaya yarayan şeyi yapmak. İç araç tartışmasında aynı uyarı
 oyunun kendisi için yapılmıştı, panonun kendisi için de geçerli.
 
+**Düzeltme, 4 Eylül 2026.** Yukarıdaki karşılaştırmanın yarısı yanlıştı.
+"Mytherra hâlâ Faz 0: Konsept'te" cümlesi panonun kaydına bakarak
+yazılmıştı, ama o kayıt gerçek projeyi tarif etmiyordu. Denetim, oyunun
+Nisan'da Godot'dan Unity'ye geçtiğini, 42 script ve çalışan bir çatışma
+sistemi (yaklaşık yüzde 70) olduğunu gösteriyor. Yani oyun ilerlemiş,
+ilerlemediğini sanan pano olmuş.
+
+Bu, üstteki profil bulgusuyla aynı sınıftan üçüncü bir örnek: sistem
+kendi kaydının eskidiğini fark edemiyor ve eski kayda dayanarak bir yargı
+üretiyor. Burada ürettiği yargı da kullanıcı hakkındaydı, yani ton
+kuralına iki kez aykırı.
+
+Uyarının kendisi ayakta kalıyor: araç hızlı büyüdü ve büyümeye devam
+ederse oyunun yerini alabilir. Ama gerekçesi artık "oyun duruyor" değil,
+sadece "araç hızlı büyüyor".
+
 Öneri: yukarıdaki maddelere geçmeden önce panoyu bir hafta boyunca
 gerçekten kullan. Faz 0 teslimatlarını doldur, oturum kaydet, kapıyı
 zorla. Eksikler o zaman kendiliğinden görünür ve tahmin edilerek değil
