@@ -165,3 +165,153 @@ export function compareForImport(text, currentStore) {
 
   return { gelen, mevcut, yeni, dahaEski, gerileme, bosMu: !gelen.active }
 }
+
+// Yedek damgası.
+//
+// NEDEN AYRI ANAHTAR: yedek, verinin değil BU TARAYICININ özelliği.
+// Damga store'un içinde dursaydı dışa aktarılan dosyaya da girerdi ve
+// başka bir bilgisayardan gelen dosyayı içe aktarmak, o bilgisayarın
+// yedeğini burada alınmış gibi gösterirdi. Gösterge o anda yalan söyler.
+//
+// Damganın yanında o andaki özet de saklanıyor. Sebebi aşağıda,
+// backupStatus'ta.
+const BACKUP_KEY = 'oyunUretimPanosuYedek'
+
+export function loadBackupMark() {
+  try {
+    const raw = localStorage.getItem(BACKUP_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed || !parsed.at) return null
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+export function saveBackupMark(store) {
+  const mark = { at: new Date().toISOString(), ozet: storeSummary(store) }
+  try {
+    localStorage.setItem(BACKUP_KEY, JSON.stringify(mark))
+  } catch {
+    // Damga yazılamazsa dışa aktarma yine çalışır, sadece gösterge boş kalır.
+  }
+  return mark
+}
+
+// Yedek durumu. Damga ile bugünkü veri karşılaştırılır.
+//
+// NEDEN SADECE GÜN SAYMIYOR: iki hafta çalışılmadıysa iki haftalık bir
+// yedek eksiksizdir, uyarmak yanlış olur. Risk, geçen zaman değil o
+// zamanda BİRİKEN İŞ. Damganın yanında özet saklanmasının sebebi bu.
+//
+// Saf fonksiyon: damgayı kendisi okumaz, dışarıdan alır. Böylece
+// localStorage olmadan da sınanabiliyor (scripts/yedek-testi.mjs).
+export function backupStatus(mark, store, profile) {
+  const simdi = storeSummary(store)
+  if (!store || !store.active) return { durum: 'proje-yok', uyari: false }
+
+  if (!mark) {
+    return { durum: 'hic', uyari: true, gun: null, tarih: null, fark: null }
+  }
+
+  const gecen = Date.now() - new Date(mark.at).getTime()
+  const gun = Math.max(0, Math.floor(gecen / 86400000))
+  const eski = mark.ozet || {}
+
+  // Proje değiştiyse (yeni proje başlatıldı, arşivden dönüldü) sayıları
+  // çıkarmak anlamsız: veri kümesi başka bir kümedir, tamamı yedeksizdir.
+  const farkliProje = (simdi.projeAdi || null) !== (eski.projeAdi || null)
+
+  const artis = (alan) => Math.max(0, (simdi[alan] || 0) - (eski[alan] || 0))
+  const fark = {
+    oturum: farkliProje ? simdi.oturum : artis('oturum'),
+    dakika: farkliProje ? simdi.dakika : artis('dakika'),
+    adim: farkliProje ? simdi.adim : artis('adim'),
+    bilesen: farkliProje ? simdi.bilesen : artis('bilesen'),
+    arsiv: farkliProje ? simdi.arsiv : artis('arsiv'),
+  }
+  const degisti =
+    farkliProje ||
+    fark.oturum > 0 ||
+    fark.dakika > 0 ||
+    fark.adim > 0 ||
+    fark.bilesen > 0 ||
+    fark.arsiv > 0
+
+  // İki eşik, ikisi de uydurma değil:
+  //
+  // 1. Bir haftalık takvim. Elle alınan bir yedeğin tutturulabilir en
+  //    sık ritmi haftalıktır; pano zaten haftalık özet çıkarıyor
+  //    (tempo.js). Daha sık hatırlatmak gürültü olur ve gürültü
+  //    okunmaz hale gelir.
+  // 2. Kullanıcının kendi bir haftalık tempo karşılığı. Aynı işi üç
+  //    günde yapan biri için risk aynıdır, takvimin dolmasını beklemek
+  //    riski olduğundan küçük gösterir.
+  const haftalikDakika =
+    (Number(profile && profile.dailyMinutes) || 0) *
+    (Number(profile && profile.daysPerWeek) || 0)
+  const uyari =
+    degisti && (gun >= 7 || (haftalikDakika > 0 && fark.dakika >= haftalikDakika))
+
+  return {
+    durum: degisti ? 'birikti' : 'guncel',
+    uyari,
+    gun,
+    tarih: mark.at,
+    fark,
+    farkliProje,
+  }
+}
+
+function sure(dakika) {
+  const s = Math.floor(dakika / 60)
+  const d = dakika % 60
+  if (s === 0) return d + ' dk'
+  if (d === 0) return s + ' sa'
+  return s + ' sa ' + d + ' dk'
+}
+
+// Durumun tek satırlık karşılığı. İki ekran da aynı cümleyi kullanır,
+// çünkü iki ayrı yerde iki ayrı sayı görmek göstergeyi güvenilmez yapar.
+//
+// Ton: ara verilmiş olmak veya yedek almamış olmak suçlanmaz. Sayı
+// söylenir, ne yapılacağı yazılır, gerisi kullanıcının kararı.
+export function yedekMetni(yedek) {
+  if (!yedek || yedek.durum === 'proje-yok') return null
+
+  if (yedek.durum === 'hic') {
+    return {
+      baslik: 'Bu tarayıcıdan hiç yedek alınmadı',
+      ayrinti:
+        'Bütün proje verisi tek bir tarayıcının deposunda duruyor. Tarayıcı verisi ' +
+        'temizlenirse veya bilgisayar değişirse geri getirilemez.',
+    }
+  }
+
+  const ne =
+    yedek.gun === 0 ? 'bugün' : yedek.gun === 1 ? 'dün' : yedek.gun + ' gün önce'
+
+  if (yedek.durum === 'guncel') {
+    return {
+      baslik: 'Son yedek ' + ne + ' alındı',
+      ayrinti: 'O günden beri yeni kayıt yok, dosya güncel.',
+    }
+  }
+
+  const parcalar = []
+  if (yedek.fark.dakika > 0) parcalar.push(sure(yedek.fark.dakika) + ' çalışma')
+  if (yedek.fark.oturum > 0) parcalar.push(yedek.fark.oturum + ' oturum kaydı')
+  if (yedek.fark.adim > 0) parcalar.push(yedek.fark.adim + ' tamamlanan adım')
+  if (yedek.fark.bilesen > 0) parcalar.push(yedek.fark.bilesen + ' içerik bileşeni')
+  if (yedek.fark.arsiv > 0) parcalar.push(yedek.fark.arsiv + ' arşivlenen proje')
+
+  return {
+    baslik: 'Son yedek ' + ne + ' alındı',
+    ayrinti: yedek.farkliProje
+      ? 'Yedekten sonra proje değişmiş. Elindeki dosya bu projeyi hiç içermiyor.'
+      : parcalar.length > 0
+        ? 'O günden beri eklenenler dosyada yok: ' + parcalar.join(', ') + '.'
+        : 'O günden beri değişiklik var ama sayıya yansımıyor.',
+  }
+}

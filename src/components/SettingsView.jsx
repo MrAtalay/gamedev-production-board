@@ -3,6 +3,7 @@ import Icon from './Icon.jsx'
 import NumberField from './NumberField.jsx'
 import ArchiveDetail from './ArchiveDetail.jsx'
 import { computeEstimate, formatDate } from '../lib/estimate.js'
+import { yedekMetni } from '../lib/storage.js'
 import { GENRES, findGenre } from '../data/genres.js'
 import {
   SCALES,
@@ -31,7 +32,7 @@ const PROFILE_FIELDS = [
   { key: 'teamId', label: 'Ekip', options: TEAM_SIZES },
 ]
 
-export default function SettingsView({ project, archive, actions }) {
+export default function SettingsView({ project, archive, actions, yedek }) {
   const fileRef = useRef(null)
   const [confirmNew, setConfirmNew] = useState(false)
   // Arşivde açık olan projenin kimliği. Aynı anda tek proje açılır,
@@ -42,6 +43,7 @@ export default function SettingsView({ project, archive, actions }) {
 
   const estimate = computeEstimate(project.profile)
   const genre = findGenre(project.profile.genreId)
+  const yedekYazi = yedekMetni(yedek)
 
   return (
     <div>
@@ -291,6 +293,23 @@ export default function SettingsView({ project, archive, actions }) {
           Veriler bu tarayıcıda saklanıyor. Başka bir bilgisayara taşımak veya yedek
           almak için dışa aktar.
         </p>
+        {/*
+          Yedek göstergesi her zaman burada, uyarı olmasa da. Durumu ancak
+          uyarı çıkınca görebilmek, arada ne olduğunu bilinmez yapar.
+        */}
+        {yedekYazi && (
+          <div className={yedek.uyari ? 'rules' : 'hint-box'} style={{ marginBottom: 14 }}>
+            {yedek.uyari ? (
+              <div className="rules-title">
+                <Icon name="archive" size={15} />
+                {yedekYazi.baslik}
+              </div>
+            ) : (
+              <strong>{yedekYazi.baslik}</strong>
+            )}
+            <p style={{ fontSize: 13, margin: '6px 0 0' }}>{yedekYazi.ayrinti}</p>
+          </div>
+        )}
         <div className="btn-row">
           <button className="btn btn-sm" onClick={actions.exportData}>
             <Icon name="download" size={15} />

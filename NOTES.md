@@ -254,6 +254,85 @@ tempo ve piyasa çıpası kendi projesinde işe yarıyor mu.
 
 ---
 
+## Ne yapıldı (v3.4: yedek hatırlatması)
+
+3 Eylül 2026. Geliştirme planındaki 3. madde. Bütün proje verisi tek
+tarayıcının `localStorage`'ında duruyor, dışa aktarma var ama alınıp
+alınmadığını söyleyen hiçbir şey yoktu. Bu bilgisayardaki geliştirme
+araçları 30 gün sonunda kaldırılacak, o yüzden madde ertelenmedi.
+
+Yapılan: hatırlatma. Otomatik indirme değil, çünkü tarayıcı izinsiz
+dosya indiremez ve indirebilseydi bile kullanıcının bilmediği bir
+dizine biriken dosyalar yedek sayılmaz.
+
+### Gün saymak yetmiyor
+
+İlk akla gelen "son yedek N gün önce alındı" göstergesi. Tek başına
+yanlış: iki hafta çalışılmadıysa iki haftalık bir yedek eksiksizdir ve
+uyarmak yalan olur. Panonun kendi kuralı burada da geçerli, sistem
+sadece doğrulayabildiğini söyler.
+
+Bu yüzden dışa aktarma anında `storeSummary` çıktısı da damgayla
+birlikte saklanıyor. Risk, geçen zaman değil o zamanda **biriken iş**:
+kaç oturum, kaç dakika, kaç adım, kaç içerik bileşeni. Gösterge de
+bunu yazıyor, yani kullanıcı ne kaybedeceğini görüyor.
+
+### Damga neden store'un dışında
+
+`oyunUretimPanosuYedek` ayrı bir localStorage anahtarı. Store'un içinde
+olsaydı dışa aktarılan dosyaya da girerdi ve o dosyayı başka bir
+bilgisayarda içe aktarmak, orada hiç alınmamış bir yedeği alınmış gibi
+gösterirdi. Yedek verinin değil, o tarayıcının özelliği.
+
+### İki eşik, ikisi de türetilmiş
+
+Uyarı iki koşuldan biri sağlanınca çıkıyor:
+
+1. **Yedekten beri bir hafta geçmiş ve iş birikmiş.** Elle alınan bir
+   yedeğin tutturulabilir en sık ritmi haftalık. Pano zaten haftalık
+   özet çıkarıyor (`tempo.js`). Daha sık hatırlatmak gürültü olur.
+2. **Kullanıcının kendi bir haftalık tempo karşılığı kadar iş
+   birikmiş.** `dailyMinutes * daysPerWeek`. Aynı işi üç günde yapan
+   biri için risk aynı; takvimin dolmasını beklemek riski olduğundan
+   küçük gösterir.
+
+İkisi de kullanıcının kendi girdisinden veya panonun var olan
+ritminden çıkıyor, uydurulmuş sabit yok.
+
+### Proje değişince çıkarma yapılmıyor
+
+Yeni proje başlatıldıysa veya arşivden dönüldüyse sayıları çıkarmak
+anlamsız. Çıkarma yapılsaydı fark negatif çıkar, sıfıra kırpılır ve
+sistem "değişiklik yok" derdi. Oysa elindeki dosya o projeyi hiç
+içermiyor. `farkliProje` bayrağı bunu ayırıyor ve metin bunu söylüyor.
+
+### Nerede görünüyor
+
+- **Ayarlar, Veri kartı**: her zaman. Uyarı yokken de durum yazıyor,
+  çünkü durumu ancak uyarı çıkınca görebilmek arada ne olduğunu
+  bilinmez yapar.
+- **Bugün ekranı**: sadece eşik aşılınca, sessiz bir kart olarak.
+  Uyarı rengi kullanılmadı: her gün görünen veya bağıran bir uyarı
+  okunmaz hale gelir ve gerçekten gerektiğinde de okunmaz. Kartın
+  içinde "Yedek al" düğmesi var, aynı `exportData` eylemini çağırıyor.
+
+Ton kuralı gereği yedek almamış olmak suçlanmıyor. Sayı söyleniyor,
+dışa aktarmanın veriye dokunmadığı yazılıyor, gerisi kullanıcının.
+
+### Doğrulama
+
+`scripts/yedek-testi.mjs`, 22 kontrol, `npm test` içinde. `backupStatus`
+saf yazıldı (damgayı kendisi okumuyor, dışarıdan alıyor), o yüzden
+localStorage olmadan sınanabiliyor.
+
+Kusur kasten enjekte edilip testin kırıldığı doğrulandı: haftalık eşik
+70 güne çıkarıldığında 1 kontrol, `farkliProje` bayrağı kaldırıldığında
+4 kontrol kaldı. Ayrıca `npm run lint` ve `npm run build` temiz.
+
+Arayüz tarafı elle görülmedi, bu projede arayüz testi zaten yok.
+
+---
+
 ## Ne yapıldı (v3.3: zaman gerçekliği ve piyasa çıpası)
 
 31 Ağustos 2026. "Sırada ne var" listesindeki dört madde de kapatıldı, üstüne
@@ -1014,6 +1093,9 @@ durmamalı.
 Küçük iş: "son yedek N gün önce alındı" göstergesi ve belli bir süre
 geçince uyarı. Otomatik indirme değil, hatırlatma.
 
+**Yapıldı, 3 Eylül 2026 (v3.4).** Gün sayısı tek başına yetmediği için
+gösterge biriken işi ölçüyor. Ayrıntısı yukarıdaki v3.4 bölümünde.
+
 ### 4. İçerik listesi ile üretim panosu arasında köprü
 
 İçerik bileşenleri asıl işin kendisi. Üretim panosundaki kartlar elle
@@ -1678,7 +1760,9 @@ bileşeninde de vardı. İkisine de `color: var(--text)` eklendi ve bu durum
 
 ## Bilinen sınırlamalar
 
-- Veriler tek tarayıcıda saklanıyor. Dışa aktarma var ama otomatik yedekleme yok.
+- Veriler tek tarayıcıda saklanıyor. Dışa aktarma ve yedek hatırlatması var,
+  otomatik yedekleme yok. Tarayıcı izinsiz dosya indiremez; indirebilseydi bile
+  kullanıcının bilmediği bir dizine biriken dosyalar yedek sayılmaz.
 - Aynı anda tek aktif proje destekleniyor. Bu bilinçli bir kısıt: günde bir
   saatlik tempoda iki projeyi birlikte yürütmek ikisini de bitirmemek demek.
   Arşiv istendiği kadar proje tutabilir.

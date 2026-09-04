@@ -30,6 +30,9 @@ import {
   exportStore,
   compareForImport,
   clearDraft,
+  loadBackupMark,
+  saveBackupMark,
+  backupStatus,
 } from './lib/storage.js'
 
 const NAV = [
@@ -49,6 +52,9 @@ const NAV = [
 export default function App() {
   const [store, setStore] = useState(loadStore)
   const [theme, setTheme] = useState(loadTheme)
+  // Son yedeğin damgası. Store'un dışında durduğu için ayrı bir durum;
+  // dışa aktarma dışında hiçbir şey değiştirmez.
+  const [backupMark, setBackupMark] = useState(loadBackupMark)
   const [view, setView] = useState('bugun')
   const [selectedPhaseId, setSelectedPhaseId] = useState(null)
   const [toasts, setToasts] = useState([])
@@ -351,7 +357,8 @@ export default function App() {
 
     exportData() {
       exportStore(store)
-      toast('Dosya indirildi.', 'good')
+      setBackupMark(saveBackupMark(store))
+      toast('Dosya indirildi. Yedek tarihi güncellendi.', 'good')
     },
 
     // İçe aktarma iki adımlı: önce karşılaştırma, sonra onay.
@@ -466,6 +473,7 @@ export default function App() {
 
   const task = nextTask(project)
   const phaseForView = selectedPhaseId || project.currentPhaseId
+  const yedek = backupStatus(backupMark, store, project.profile)
 
   // Kenar çubuğundaki rozetler: kullanıcıya nerede eksik olduğunu gösterir.
   const currentDeliverables = phaseDeliverables(project, project.currentPhaseId)
@@ -555,7 +563,7 @@ export default function App() {
 
       <main className="main">
         {view === 'bugun' && (
-          <TodayView project={project} actions={actions} goTo={setView} />
+          <TodayView project={project} actions={actions} goTo={setView} yedek={yedek} />
         )}
         {view === 'yol' && (
           <RoadmapView
@@ -586,7 +594,12 @@ export default function App() {
         )}
         {view === 'butce' && <FinanceView project={project} actions={actions} />}
         {view === 'ayarlar' && (
-          <SettingsView project={project} archive={store.archive} actions={actions} />
+          <SettingsView
+            project={project}
+            archive={store.archive}
+            actions={actions}
+            yedek={yedek}
+          />
         )}
       </main>
 

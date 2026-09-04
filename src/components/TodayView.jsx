@@ -10,9 +10,10 @@ import {
   overallProgress,
 } from '../lib/project.js'
 import { computeEstimate, formatDate } from '../lib/estimate.js'
+import { yedekMetni } from '../lib/storage.js'
 import { findGenre } from '../data/genres.js'
 
-export default function TodayView({ project, actions, goTo }) {
+export default function TodayView({ project, actions, goTo, yedek }) {
   const [note, setNote] = useState('')
   const [idea, setIdea] = useState('')
 
@@ -24,6 +25,9 @@ export default function TodayView({ project, actions, goTo }) {
   const genre = findGenre(project.profile.genreId)
   const loggedHours = Math.round(totalLoggedMinutes(project) / 60)
   const progress = overallProgress(project)
+  // Yedek hatırlatması sadece eşik aşılınca çıkar. Her gün görünen bir
+  // uyarı okunmaz hale gelir ve gerçekten gerektiğinde de okunmaz.
+  const yedekYazi = yedek && yedek.uyari ? yedekMetni(yedek) : null
 
   function logSession(minutes) {
     actions.logSession({
@@ -56,6 +60,25 @@ export default function TodayView({ project, actions, goTo }) {
                 devam et.
               </span>
             </div>
+          </div>
+        </div>
+      )}
+
+      {yedekYazi && (
+        <div className="card card-tight">
+          <div className="row">
+            <Icon name="archive" size={17} className="muted" />
+            <div style={{ flex: 1 }}>
+              <strong>{yedekYazi.baslik}</strong>{' '}
+              <span className="small muted">
+                {yedekYazi.ayrinti} Dışa aktarmak bir dosya indirir, verine
+                dokunmaz.
+              </span>
+            </div>
+            <button className="btn btn-sm" onClick={actions.exportData}>
+              <Icon name="download" size={15} />
+              Yedek al
+            </button>
           </div>
         </div>
       )}
