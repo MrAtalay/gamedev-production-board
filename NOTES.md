@@ -1,5 +1,95 @@
 # Proje Panosu: Durum Notu
 
+## Mytherra denetimi: panonun profili gerçeği tutmuyor (4 Eylül 2026, karar verilmedi)
+
+Kullanıcı ev bilgisayarındaki Mytherra deposunu ve Figma lore dosyasını
+denetletti, sonucu buraya getirdi. Denetim oyunun kendi deposuna ait, ama
+panoyu doğrudan ilgilendiren bir tarafı var: `KARARLAR.md` içindeki profil
+gerçeği tutmuyor.
+
+### Üç girdi eskimiş
+
+`KARARLAR.md` 27 Ağustos 2026'da dolduruldu ve sıfırdan başlayan tek
+kişilik bir proje tarif ediyor. Denetim ise Nisan 2026'da Godot'dan
+Unity'ye geçmiş, Temmuz boyunca commit almış, üç kişilik bir proje
+gösteriyor.
+
+| Panodaki girdi | Denetimin gösterdiği | Doğru çarpan |
+| --- | --- | --- |
+| Ekip: Yalnızım (1,00) | 3 kişi ve 1 boş rol | 0,45 |
+| Sanat: hazır varlık (0,85) | Hedef 32px elle çizilen pixel art, rol sahipsiz | 1,00 |
+| Durum: "Projeyi başlat henüz denmedi" | 42 script, combat yüzde 70, aylardır çalışıyor | yok |
+
+"İlk oyunum" girdisi yerinde kalmalı. Gerekçesi script sayısı değildi,
+yayınlanmış oyun olmamasıydı ve o gerekçe duruyor.
+
+### Elle hesap: iki değişiklik ters yönde çalışıyor
+
+Sanat kaldıracını kaybetmek yükü artırıyor, ekip çarpanı yarıdan
+fazlasını düşürüyor. Net sonuç lehte: tam kapsam 61,4 kattan 28 kat
+bandına iniyor, mikro ilk sürüm ise 209 saatlik bütçenin içine giriyor ve
+"Riskli" kararı değişebilir.
+
+**Bu sayılar elle çarpımdır, panonun çıktısı değildir.** `aiEffect`
+dağılımını birebir taklit etmiyorlar ve birkaç yüzde şaşıyorlar. Doğru
+yol, profili Ayarlar ekranından girip panoyu yeniden çalıştırmak.
+
+### Panoyu ilgilendiren asıl bulgu
+
+Pano kendi profilinin eskidiğini fark edemiyor.
+
+`KURALLAR.md` içinde zaten yazılı olan kural şu: "Yazılı sayılar da eskir.
+Bilinen bir sayıyı koda yazmak yetmez, ne zaman doğru olduğu da yazılır ve
+arayüz bunu söyler." Bu kural mağaza ücretlerine uygulandı (v2.6),
+yedeklere uygulandı (v3.4), ama profilin kendisine uygulanmadı.
+
+Profil bir kez doldurulup aylarca dokunulmadan durabiliyor ve sistem o
+süre boyunca artık doğru olmayan bir tahmini güvenle gösteriyor. Yanlış
+bir sayıyı güvenle göstermek, panonun kendi ton kuralına aykırı. Aşağıdaki
+"Sırada ne var" listesine 6. madde olarak eklendi.
+
+### Üreteç sorusu yeniden geldi, dosya zaten cevaplamıştı
+
+Kullanıcı pixel art üreteci fikrini ayrıntılandırdı: elle çizilen beş
+kılıcı ebeveyn alıp çocuk üreten, beğenilenleri havuza katan bir döngü,
+üstüne tile ve dünya üretimi.
+
+`src/data/content.js` bu soruyu zaten cevaplamıştı: "Bölge üreteci yazmak,
+tek bölgelik bir ilk sürümde saf zarardır. Veri katmanını kurmak ise
+neredeyse bedava ve üreteci sonradan yazmak isteyene işin yarısını hazır
+verir." Yapılmayacaklar listesinde de aynı madde duruyor.
+
+Cevap değişmedi ama gerekçesi güçlendi. Denetim, Mytherra'nın tasarımda 13
+bölge, 24 krallık ve 8 boss içerdiğini gösteriyor, yani hacim sorusu
+ileride farklı cevaplanabilir. Değişmeyen şey sıralama: önce sayım, sonra
+ölçüm, sonra üreteç kararı. Hacim ölçülmeden yapılan bir üreteç, kârlı
+olup olmadığı ölçülemeyen bir yatırımdır.
+
+Teknik tarafta iki şey netleşti, ileride lazım olursa burada duruyor.
+Üretecin genomu raster olamaz, parça tabanlı olmalı: kılıcı namlu,
+siperlik, kabza ve topuz yuvalarına ayırmak beş kılıçtan 625 birleşim
+veriyor ve her parça elle çizildiği için hiçbir çocuk el çizimi
+kalitesinin altına düşmüyor. Tile tarafında ise Wave Function Collapse
+hazır ve olgun bir cevap.
+
+### Üç sayfa yayınlandı
+
+- [Mytherra Karar Panosu](https://claude.ai/code/artifact/ee6fd8d9-40fd-44db-a8b1-32c0bf22a393):
+  `KARARLAR.md` ve `NOTES.md` sayılarının grafik dökümü.
+- [Mytherra Karar Föyü](https://claude.ai/code/artifact/b60f1ea8-a57d-4d23-9da7-1036fd3c8463):
+  denetimin bulduğu sekiz çelişkinin karar verilebilir hali.
+- [Mytherra Üretim Sırası](https://claude.ai/code/artifact/b4e80fbe-21d1-416d-a5ea-4f6f20637f64):
+  çelişki temizliğinden Unity'de sistem kurmaya kadar yedi bloklu iş akışı.
+
+### Karar durumu
+
+- Profil güncellenmedi, pano yeniden çalıştırılmadı.
+- Sekiz çelişkinin hiçbiri kapatılmadı, kararlar kullanıcıda.
+- Sanat rolü boş. İş akışının D blokundan sonrası bu role bağlı ve bu bir
+  iş kalemi değil, bir kişi kararı.
+
+---
+
 ## Piyasa vaka çalışması (31 Ağustos 2026, araştırma, karar verilmedi)
 
 Kullanıcı son dönemde tutan oyunları örnek verdi ve araştırılmasını istedi.
@@ -1112,6 +1202,24 @@ gelir. Bir boss ile bir kaynak aynı birim değil.
 
 1. maddeyle aynı felsefe, ona bağlanabilir. Küçük iş.
 
+### 6. Profilin eskidiğini fark etmek
+
+Profil bir kez doldurulup aylarca dokunulmadan durabiliyor. Bu gerçekten
+yaşandı: `KARARLAR.md` 27 Ağustos'ta tek kişilik ve henüz başlamamış bir
+proje tarif ederken, gerçek proje aylardır üç kişiyle sürüyordu. Sistem o
+süre boyunca artık doğru olmayan bir tahmini güvenle gösterdi.
+
+Kural zaten yazılı, sadece profile uygulanmamış: bir sayının ne zaman
+doğru olduğu yazılır ve arayüz bunu söyler. Mağaza ücretlerinde ve
+yedeklerde uygulandı, burada uygulanmadı.
+
+Yapılacak şey uyarı değil, hatırlatma: profilin en son ne zaman
+doğrulandığını sakla ve üstünden belli bir süre geçince "bunlar hâlâ
+doğru mu" diye sor. v3.4'teki yedek göstergesinin aynısı, sadece konusu
+farklı. Ekip, sanat ve tür alanları en çok değişenler.
+
+Küçük iş. 3. maddeyle aynı aileden, mekanizması da aynı.
+
 ### Yapılmayacaklar
 
 - **Yapay zeka ile hissiyat testi.** Sistemin kendi mantığına aykırı.
@@ -1122,7 +1230,8 @@ gelir. Bir boss ile bir kaynak aynı birim değil.
 ### Sıralama önerisi
 
 3 (küçük, veri güvenliği), sonra 2 (erken uyarı), sonra 1 (kalibrasyon).
-4 ve 5 sonraya. Ama bundan önce gelen bir şey var, aşağıya bakın.
+4 ve 5 sonraya. 6 küçük ve 3 ile aynı mekanizmayı kullanıyor, onun
+arkasına eklenebilir. Ama bundan önce gelen bir şey var, aşağıya bakın.
 
 ### Panonun kendisi hakkında dürüst not
 
