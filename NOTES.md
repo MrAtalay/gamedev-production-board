@@ -90,6 +90,68 @@ hazır ve olgun bir cevap.
 
 ---
 
+## Panonun kapsamı: derinleşme mi genişleme mi (4 Eylül 2026, karar verilmedi)
+
+Kullanıcı panonun yetersiz işlev gördüğünü söyledi ve kapsamının oyunun
+şekline göre büyümesi gerektiğini düşünüyor. His doğru, ve altında his
+olmayan bir sebep var.
+
+### Önce gösterilebilir hata
+
+Pano ekip büyüklüğünü tek bir çarpanla modelliyor ve `requiredHours`
+içinde tahminin tamamına düz uyguluyor. Üç kişi için çarpan 0,45 ve
+bütün işkollarına aynı şekilde iniyor.
+
+Ama RPG'de işin yüzde 25'i sanat ve denetime göre o işkolunda kimse yok.
+Yani pano bugün, sanat işinin de üç kişiye bölündüğünü varsayıp yüzde 55
+ucuzlatıyor. O işi yapacak sıfır kişi var.
+
+Bu eksik özellik değil, **yanlış cevap**. Üstelik panonun bunu bilmesi
+için gereken veri elinde: `disciplineShares` sanatın yüzde 25 olduğunu
+zaten hesaplıyor. Eksik olan tek şey bir işkolunun sahipsiz olduğunu
+söyleyebilmek. Denetimin en önemli bulgusunu pano kendi kendine
+yakalayabilirdi.
+
+### İki ayrı büyüme yönü var, ikisi aynı şey değil
+
+**Derinleşme:** panonun kendi sorusunu daha iyi cevaplaması. Sığar mı,
+nerede duruyoruz, ne sahipsiz. Yukarıdaki hata bu yöne ait ve bu yönde
+büyümesi doğru.
+
+**Genişleme:** panonun tasarımı barındırması, üretim takibi yapması,
+görev panosu olması. Buna karşı bir gerekçe var: Mytherra deposunda
+zaten `docs/`, `lore/`, git geçmişi ve bir yol haritası duruyor. Pano
+onların kopyası olursa iki kanon kaynak olur. Bu konuşmanın tamamı,
+Mytherra'daki sekiz çelişkinin iki kanon kaynaktan doğduğu üzerineydi.
+
+Önerilen sınır tek cümle: **pano tasarımı saklamaz, tasarımın sığıp
+sığmadığını söyler.** `content.js` bunu zaten söylüyor, kendisinin içerik
+listesi olduğunu ve üreteç olmadığını yazıyor.
+
+### Kalan boşluklar tahmin edilmedi, ölçülecek
+
+Girilen ilk incelemede üç boşluk göze çarptı: krallık, görev ve
+oynanabilir karakter için içerik türü yok. Mytherra'da 24 krallık ve 9
+Stage'lik bir görev hattı var, yani içeriğin büyük kısmı sayılamıyor ve
+bu doğrudan `content.js`'nin amacını baltalıyor.
+
+**Ama bunlar buraya yapılacak iş olarak yazılmadı, bilerek.** İş
+akışındaki B bloku bu listeyi kendisi yazacak: gerçek Mytherra içeriği
+panoya girilmeye başlandığı anda neyin temsil edilemediği bir öğleden
+sonrada ortaya çıkar. Üç tahmin etmek yerine gerçek listeyi beklemek,
+panonun kendi kuralı: sistem sadece doğrulayabildiğini söyler.
+
+Sahiplik maddesi bunun istisnası ve 7. madde olarak listeye eklendi,
+çünkü o bir boşluk değil hata.
+
+### Karar durumu
+
+- Sınır cümlesi önerildi, kabul edilmedi.
+- 7. madde listeye girdi, yapılmadı.
+- İçerik türü boşlukları B blokundan sonra yazılacak.
+
+---
+
 ## Piyasa vaka çalışması (31 Ağustos 2026, araştırma, karar verilmedi)
 
 Kullanıcı son dönemde tutan oyunları örnek verdi ve araştırılmasını istedi.
@@ -1220,6 +1282,28 @@ farklı. Ekip, sanat ve tür alanları en çok değişenler.
 
 Küçük iş. 3. maddeyle aynı aileden, mekanizması da aynı.
 
+### 7. Sahipsiz işkolu
+
+**Bu bir eksik değil, hata.** Listedeki diğer maddeler panoyu daha iyi
+yapar, bu madde panonun bugün verdiği yanlış bir cevabı düzeltir.
+
+Ekip büyüklüğü tek bir çarpan ve `requiredHours` içinde tahminin
+tamamına düz uygulanıyor. Üç kişi için 0,45, bütün işkollarına aynı
+şekilde. Mytherra'da işin yüzde 25'i sanat ve o işkolunda kimse yok, ama
+pano sanat işini de üçe bölüp ucuzlatıyor.
+
+Gereken veri zaten elde: `disciplineShares` her işkolunun payını
+hesaplıyor. Eksik olan, bir işkolunun sahipsiz işaretlenebilmesi ve
+sahipsiz payın ekip çarpanından muaf tutulması. Üstüne bir kapı koşulu:
+işin belli bir yüzdesi sahipsizse kapı açılmaz.
+
+Bu, panonun kaçırdığı gerçek bir durumu otomatik yakalar. Denetimin en
+önemli bulgusu ("sanat rolünün sahibi belirlenmemiş") tam olarak buydu ve
+pano onu göremedi.
+
+Küçük iş, ama önceliği yüksek: yanlış bir sayı, eksik bir özellikten
+kötüdür.
+
 ### Yapılmayacaklar
 
 - **Yapay zeka ile hissiyat testi.** Sistemin kendi mantığına aykırı.
@@ -1229,9 +1313,11 @@ Küçük iş. 3. maddeyle aynı aileden, mekanizması da aynı.
 
 ### Sıralama önerisi
 
-3 (küçük, veri güvenliği), sonra 2 (erken uyarı), sonra 1 (kalibrasyon).
-4 ve 5 sonraya. 6 küçük ve 3 ile aynı mekanizmayı kullanıyor, onun
-arkasına eklenebilir. Ama bundan önce gelen bir şey var, aşağıya bakın.
+Önce 7, çünkü diğerleri panoyu iyileştirir, o bir hatayı düzeltir.
+Sonra 3 (küçük, veri güvenliği), sonra 2 (erken uyarı), sonra 1
+(kalibrasyon). 4 ve 5 sonraya. 6 küçük ve 3 ile aynı mekanizmayı
+kullanıyor, onun arkasına eklenebilir. Ama bundan önce gelen bir şey
+var, aşağıya bakın.
 
 ### Panonun kendisi hakkında dürüst not
 
