@@ -6,6 +6,7 @@ import DisciplineOwnership from './DisciplineOwnership.jsx'
 import TeamSizeField from './TeamSizeField.jsx'
 import { computeEstimate, formatDate } from '../lib/estimate.js'
 import { yedekMetni } from '../lib/storage.js'
+import { profileText } from '../lib/profile.js'
 import { GENRES, findGenre } from '../data/genres.js'
 import {
   SCALES,
@@ -32,7 +33,7 @@ const PROFILE_FIELDS = [
   { key: 'platformId', label: 'Platform', options: PLATFORM_TARGETS },
 ]
 
-export default function SettingsView({ project, archive, actions, yedek }) {
+export default function SettingsView({ project, archive, actions, yedek, profil }) {
   const fileRef = useRef(null)
   const [confirmNew, setConfirmNew] = useState(false)
   // Arşivde açık olan projenin kimliği. Aynı anda tek proje açılır,
@@ -44,6 +45,7 @@ export default function SettingsView({ project, archive, actions, yedek }) {
   const estimate = computeEstimate(project.profile)
   const genre = findGenre(project.profile.genreId)
   const yedekYazi = yedekMetni(yedek)
+  const profilYazi = profileText(profil)
 
   return (
     <div>
@@ -82,6 +84,21 @@ export default function SettingsView({ project, archive, actions, yedek }) {
           tahmini anında güncellenir. Kapsamı küçültmek her zaman meşrudur; kapsamı
           büyütürken tarihi de gözden geçir.
         </p>
+
+        {profilYazi && (
+          <div className="hint-box" style={{ marginBottom: 14 }}>
+            <div className="row">
+              <div style={{ flex: 1 }}>
+                <strong>{profilYazi.baslik}</strong>{' '}
+                <span className="small muted">{profilYazi.ayrinti}</span>
+              </div>
+              <button className="btn btn-sm" onClick={actions.confirmProfile}>
+                <Icon name="check" size={15} />
+                Hâlâ doğru
+              </button>
+            </div>
+          </div>
+        )}
 
         {PROFILE_FIELDS.map((field) => (
           <div className="field" key={field.key}>

@@ -85,6 +85,9 @@ export function createProject(input) {
     name: input.name,
     status: 'aktif',
     profile,
+    // Profilin en son ne zaman doğrulandığı. Sihirbazdan yeni çıkmış bir
+    // profil o an doğrudur; sayacın başladığı yer burası.
+    profileCheck: { at: new Date().toISOString(), dakika: 0, kapi: 0 },
     currentPhaseId: 'konsept',
     doneSteps: {},
     doneDeliverables: {},

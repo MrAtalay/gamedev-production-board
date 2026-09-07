@@ -1,5 +1,83 @@
 # Proje Panosu: Durum Notu
 
+## Ne yapıldı (v3.7: profil eskimesi)
+
+7 Eylül 2026. Listedeki 6. madde kapatıldı. Kural zaten yazılıydı, sadece
+profilin kendisine uygulanmamıştı: bir sayının ne zaman doğru olduğu da
+yazılır ve arayüz bunu söyler. Mağaza ücretlerine uygulanmıştı (v2.6),
+yedeklere uygulanmıştı (v3.4), profile uygulanmamıştı.
+
+### Yedek göstergesinden farkı: takvim eşiği
+
+v3.4'ün dersi şuydu: gün saymak yetmez, risk geçen zaman değil o zamanda
+biriken iştir. Bu göstergede o ders yarısıyla geçerli.
+
+Yedekte "hiç çalışılmadıysa risk yok" doğru bir varsayım, çünkü yedeklenecek
+yeni veri yoktur. Burada aynı varsayım **yanlış** olurdu: panoya hiç oturum
+girilmemiş olması işin durduğu anlamına gelmez, iş panonun göremediği yerde
+sürüyor olabilir. Denetim tam olarak böyle bir durumdu; motorda aylarca
+commit atılmıştı ve panonun bundan haberi yoktu.
+
+Bu yüzden burada üç tetik var, üçü de tek başına yeterli:
+
+| Tetik | Neye dayanıyor |
+| --- | --- |
+| Faz kapısı geçildi | Panonun kendi kaydı. Tahmin değil, olay. |
+| Dört haftalık tempo kadar iş birikti | Kullanıcının kendi planı, sabit saat değil. |
+| 90 gün geçti | İşin panonun dışında sürme ihtimali. |
+
+Üçüncüsündeki 90 sayısı ölçülmüş değil, çizilmiş bir sınır ve bu `profile.js`
+içinde yazılı. Gerekçe: ekip, sanat yaklaşımı ve ölçek panoya hiç dokunulmadan
+da değişebilen alanlar; doksan gün, hiçbirinin değişmediğini varsaymanın makul
+kaldığı en uzun süre olarak seçildi.
+
+### Dürüst olmak gereken bir nokta
+
+**Bu gösterge, kendisini doğuran olayı yakalayamazdı.** Denetimdeki profil
+27 Ağustos'ta doldurulmuştu ve 4 Eylül'de yanlış olduğu görüldü: sekiz günlük
+bir profildi, eski değildi. Yazıldığı gün yanlıştı.
+
+Bu yüzden gösterge "profilin eski" demiyor, **"bunlar hâlâ doğru mu" diye
+soruyor.** Aradaki fark önemli: birincisi bir iddia, ikincisi bir soru ve
+sistem sadece doğrulayabildiğini söyler. Panonun bilebileceği tek şey en son
+ne zaman bakıldığı ve o günden beri ne olduğudur.
+
+### Nasıl çalışıyor
+
+`project.profileCheck` damgası: ne zaman doğrulandığı, o andaki toplam çalışma
+dakikası ve geçilmiş kapı sayısı. Sihirbazdan yeni çıkmış bir profil o an
+doğrudur, sayaç orada başlıyor.
+
+Profili elle değiştirmek de bir doğrulamadır ve damgayı yeniliyor: alanlar
+gözden geçirilmeden değiştirilmiyor, ayrıca onay istemek gereksiz tekrar
+olurdu. Hiçbir şey değiştirmeden onaylamak için Ayarlar'da "Hâlâ doğru"
+düğmesi var.
+
+Damgası olmayan kayıtlar (bu gösterge eklenmeden önce kurulanlar) tarih
+uydurmuyor, "ne zaman doğrulandığı bilinmiyor" diyor.
+
+Uyarı iki ekranda: Bugün ekranında yedek hatırlatmasının yanında, Ayarlar'da
+profil alanlarının hemen üstünde. İkisi de aynı cümleyi kullanıyor, çünkü iki
+ayrı yerde iki ayrı sayı görmek göstergeyi güvenilmez yapar.
+
+Ton kuralı gereği suçlamıyor: ne yapılmadığı değil, o günden beri ne olduğu
+yazılıyor ve karar kullanıcıda.
+
+### Test
+
+`scripts/profil-testi.mjs`, 22 kontrol. Üç tetik ayrı ayrı sınanıyor, çünkü
+biri bozulduğunda kalan ikisi göstergeyi çalışıyor gibi gösterir. Eşiklerin
+bir birim altında uyarmadığı da kontrol ediliyor.
+
+Kusur iki kez enjekte edildi: kapı tetiği kapatıldı (2 kontrol kırıldı),
+takvim tetiği kapatıldı (3 kontrol kırıldı), ikisi de geri alındı.
+
+Bir kontrol de ton için: metinde suçlayan ifade bulunmadığı ve ne yapılacağının
+yazılı olduğu. Ton kuralları genel olarak makineyle ölçülemez, ama bu göstergenin
+tek cümlesi için kelime taraması yapılabiliyor.
+
+---
+
 ## Ne yapıldı (v3.6: ekip kaç kişi)
 
 7 Eylül 2026. Kullanıcı istedi: ekip üç kişiden fazla da olabilmeli, kişi
@@ -1437,6 +1515,10 @@ doğru mu" diye sor. v3.4'teki yedek göstergesinin aynısı, sadece konusu
 farklı. Ekip, sanat ve tür alanları en çok değişenler.
 
 Küçük iş. 3. maddeyle aynı aileden, mekanizması da aynı.
+
+**Yapıldı, 7 Eylül 2026 (v3.7).** Ayrıntısı yukarıdaki v3.7 bölümünde.
+Mekanizma tam olarak aynı çıkmadı: yedekte "hiç çalışılmadıysa risk yok"
+doğruydu, profilde değil.
 
 ### 7. Sahipsiz işkolu
 

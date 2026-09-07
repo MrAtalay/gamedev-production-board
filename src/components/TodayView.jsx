@@ -11,9 +11,10 @@ import {
 } from '../lib/project.js'
 import { computeEstimate, formatDate } from '../lib/estimate.js'
 import { yedekMetni } from '../lib/storage.js'
+import { profileText } from '../lib/profile.js'
 import { findGenre } from '../data/genres.js'
 
-export default function TodayView({ project, actions, goTo, yedek }) {
+export default function TodayView({ project, actions, goTo, yedek, profil }) {
   const [note, setNote] = useState('')
   const [idea, setIdea] = useState('')
 
@@ -28,6 +29,7 @@ export default function TodayView({ project, actions, goTo, yedek }) {
   // Yedek hatırlatması sadece eşik aşılınca çıkar. Her gün görünen bir
   // uyarı okunmaz hale gelir ve gerçekten gerektiğinde de okunmaz.
   const yedekYazi = yedek && yedek.uyari ? yedekMetni(yedek) : null
+  const profilYazi = profil && profil.uyari ? profileText(profil) : null
 
   function logSession(minutes) {
     actions.logSession({
@@ -78,6 +80,22 @@ export default function TodayView({ project, actions, goTo, yedek }) {
             <button className="btn btn-sm" onClick={actions.exportData}>
               <Icon name="download" size={15} />
               Yedek al
+            </button>
+          </div>
+        </div>
+      )}
+
+      {profilYazi && (
+        <div className="card card-tight">
+          <div className="row">
+            <Icon name="gamepad" size={17} className="muted" />
+            <div style={{ flex: 1 }}>
+              <strong>{profilYazi.baslik}</strong>{' '}
+              <span className="small muted">{profilYazi.ayrinti}</span>
+            </div>
+            <button className="btn btn-sm" onClick={() => goTo('ayarlar')}>
+              <Icon name="settings" size={15} />
+              Profili aç
             </button>
           </div>
         </div>

@@ -14,6 +14,7 @@ import FinanceView from './components/FinanceView.jsx'
 import SettingsView from './components/SettingsView.jsx'
 
 import { PHASES, phaseIndex } from './data/phases.js'
+import { profileMark, profileStatus } from './lib/profile.js'
 import {
   createProject,
   newId,
@@ -351,8 +352,21 @@ export default function App() {
       update((p) => ({ ...p, name }))
     },
 
+    // Profili elle değiştirmek, o profile bakıldığı anlamına gelir: alanlar
+    // gözden geçirilmeden değiştirilmiyor. Bu yüzden düzenleme de bir
+    // doğrulamadır ve ayrıca onay istemek gereksiz tekrar olurdu.
     setProfile(patch) {
-      update((p) => ({ ...p, profile: { ...p.profile, ...patch } }))
+      update((p) => ({
+        ...p,
+        profile: { ...p.profile, ...patch },
+        profileCheck: profileMark(p),
+      }))
+    },
+
+    // Hiçbir şey değiştirmeden "bunlar hâlâ doğru" demek.
+    confirmProfile() {
+      update((p) => ({ ...p, profileCheck: profileMark(p) }))
+      toast('Profil doğrulandı. Sayaç bugünden başlıyor.', 'good')
     },
 
     exportData() {
@@ -474,6 +488,7 @@ export default function App() {
   const task = nextTask(project)
   const phaseForView = selectedPhaseId || project.currentPhaseId
   const yedek = backupStatus(backupMark, store, project.profile)
+  const profilDurumu = profileStatus(project.profileCheck, project)
 
   // Kenar çubuğundaki rozetler: kullanıcıya nerede eksik olduğunu gösterir.
   const currentDeliverables = phaseDeliverables(project, project.currentPhaseId)
@@ -563,7 +578,13 @@ export default function App() {
 
       <main className="main">
         {view === 'bugun' && (
-          <TodayView project={project} actions={actions} goTo={setView} yedek={yedek} />
+          <TodayView
+            project={project}
+            actions={actions}
+            goTo={setView}
+            yedek={yedek}
+            profil={profilDurumu}
+          />
         )}
         {view === 'yol' && (
           <RoadmapView
@@ -599,6 +620,7 @@ export default function App() {
             archive={store.archive}
             actions={actions}
             yedek={yedek}
+            profil={profilDurumu}
           />
         )}
       </main>
