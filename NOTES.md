@@ -1639,6 +1639,56 @@ kaydediliyor ve v3.3'te faz karşılaştırması var. Veri, demo üzerinde
 çalışılmaya başlandığı anda birikmeye başlar. Bu madde 1. maddeye
 (kalibrasyon) bağlıdır, yayına değil.
 
+### 10. Aynı kalıbın diğer çarpanlarda taranması (soru, hata değil)
+
+Kullanıcı istedi: bu tür sessiz hataları arayalım. 7, 8 ve 9. maddelerin
+ortak kalıbı belli oldu ve aranabilir bir kalıp: **bir çarpan,
+gerekçesinin kapsadığından daha geniş bir alana uygulanıyor.**
+`requiredHours` içindeki çarpım zinciri bu gözle tarandı.
+
+RPG dağılımıyla (kod 0,33 / sanat 0,25 / ses 0,05 / yazım 0,15 / karar 0,22)
+düz uygulama ile işkoluna özel uygulamanın farkı:
+
+| Çarpan | Düz | İşkoluna özel | Fark | Gerekçe |
+| --- | --- | --- | --- | --- |
+| Sanat yaklaşımı (kendi 1,35) | 1,3500 | 1,0875 (sanat) | %24 | Adı sanat, ama yazımı da çarpıyor |
+| Motor aşinalığı (yeni 1,25) | 1,2500 | 1,0825 (kod) | %15 | Motoru öğrenmek yazımı yavaşlatmaz |
+| Platform (mobil 1,30) | 1,3000 | 1,1740 (kod+sanat) | %11 | Dokunmatik ve ekran işi, hikaye değil |
+| Deneyim (ilk oyun 1,60) | 1,6000 | 1,3300 (kod+karar) | %20 | Tartışmalı, aşağıda |
+
+**Neden hemen düzeltilmiyor, çekince burada.** `options.js` bu sayıların
+nereden geldiğini yazıyor: solo geliştirici postmortem'lerinde tekrar eden
+oranlar. Yani bunlar büyük ihtimalle **proje geneli oranlar** olarak
+ölçüldü. Öyleyse çarpanı tek bir işkoluna daraltmak kalibrasyonu bozar ve
+tahmini bu sefer fazla düşürür. Bu, 7. maddedeki hatanın ters yönde
+tekrarı olurdu.
+
+**Ama tamamen masum da değil.** Düz çarpan, tipik bir işkolu dağılımında
+makul bir yaklaşımdır; dağılım tipikten uzaklaştıkça sapar. Panonun
+`disciplineShares` alanı zaten türden türe farklı dağılımlar tanımlıyor,
+yani sistem atipik dağılımların var olduğunu kabul ediyor. İki özellik
+birbiriyle çelişiyor: biri dağılımın türe göre değiştiğini söylüyor, diğeri
+çarpanları dağılımdan bağımsız uyguluyor.
+
+Uç örnek: yazım payı yüksek bir anlatı oyununda "kendi sanatımı
+üreteceğim" seçmek, oyunun yazım işini de yüzde 35 pahalılaştırıyor.
+
+**Deneyim çarpanı bu listede en zayıf aday.** İlk oyununu yapan biri sanatta
+ve yazımda da yavaştır, düz uygulanması savunulabilir. Listede tutulmasının
+sebebi başka: 9. maddede görüldüğü gibi bu çarpan çok yıllık bir ufkun
+tamamına uygulanıyor, oysa öğrenme bir kez olur. Sorun kapsamı değil,
+zamanla değişmemesi. Bunu v3.7'nin profil eskime hatırlatması kısmen
+karşılıyor.
+
+**Cevaplanması gereken soru şu:** `options.js`'teki her çarpan için, o sayı
+proje geneli bir oran olarak mı yoksa bir işkolunun kendi etkisi olarak mı
+gözlendi. Cevap dosyada yazılı değil ve bilinmeden yapılacak her düzeltme
+uydurma olur.
+
+Yapılacak ilk iş kod değil, kayıt: her çarpanın yanına neyi ölçtüğü
+yazılmalı. Bilinmiyorsa "bilinmiyor" yazılmalı. Panonun kendi kuralı bunu
+zaten söylüyor: bir sayının ne zaman ve neye göre doğru olduğu da yazılır.
+
 Bu, panonun kaçırdığı gerçek bir durumu otomatik yakalar. Denetimin en
 önemli bulgusu ("sanat rolünün sahibi belirlenmemiş") tam olarak buydu ve
 pano onu göremedi.
