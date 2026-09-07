@@ -1,5 +1,104 @@
 # Proje Panosu: Durum Notu
 
+## Mytherra demo föyü ve içerik aracı iddiası (7 Eylül 2026, karar verilmedi)
+
+Panonun ilk gerçek vaka çalışması. Mytherra deposu GitHub'dan okundu
+(`docs/kanon-kararlari.md`, `docs/yol-haritasi.md`, `GDD/00-OZET.md`) ve
+demo, panonun alanlarına birebir eşlendi.
+
+### Girilecek profil
+
+| Alan | Değer |
+| --- | --- |
+| Tür | RPG |
+| Ölçek | Mikro |
+| Günlük dakika / gün sayısı | 120 / 4 |
+| Günün geri kalanı | Tam zamanlı bir işim veya okulum var |
+| Hedef tarih | 31.12.2027 |
+| Deneyim | İlk oyunum |
+| Motor aşinalığı | Motoru biliyorum (Unity 6000.3.3f1, URP) |
+| Sanat yaklaşımı | Kendi sanatımı üreteceğim |
+| Çok oyunculu / platform | Tek oyunculu / Bilgisayar |
+| Kaç kişi | 3 |
+| Sahipsiz işkolu | Sanat |
+| Yapay zeka | Sadece kod asistanı |
+
+**Beklenen çıktı: gereken 297 saat, elinde 439 saat, karar Rahat.**
+Kullanıcı henüz girmedi, doğrulama bekliyor.
+
+**Ölçek seçimi ilk turda yanlış yapıldı.** Küçük seçilmişti, gerekçe oyun
+süresiydi (30-90 dk). Doğru kaynak türe özel içerik hacmi alanıydı: RPG
+mikro tanımı "1 kasaba, 1 zindan, 3 düşman, 30 dakikalık oyun" ve bu Faz
+B'nin dilimiyle kelimesi kelimesine aynı. Küçük ise "3-4 bölge, 15-20
+düşman, 8-12 saatlik oyun" diyor, yani demo değil oyunun büyük kısmı.
+Fark 1189 saate karşı 297 saat. Ölçek özetleri geneldir, `contentUnits`
+kesindir.
+
+### Panonun demoda temsil edebildikleri
+
+Altı RPG türü demoyu eksiksiz karşılıyor: Stonith (bölge), İlk İniş
+Warden'ı (boss), Slag Golem ve Foreman (düşman), Haldran ve kurtarılan usta
+(dost), ocak közü ve ilk gear (kaynak), Mustafa'dan istenen 5 büyü
+(yetenek).
+
+**Tam kapsamda dört şey temsil edilemiyor:** krallık (bölgenin üstünde
+kapsayıcı yok, 24 tane var), görev hattı (9 Stage), oynanabilir karakter
+(dört kişilik roster) ve tarif/istasyon bağı. Yani tam kapsam için tahmin
+var, ölçüm yok. Bu, `content.js`'nin beklediği listenin kendisi: gerçek
+içerik girilmeye başlanınca neyin temsil edilemediği ortaya çıktı.
+
+### Tam kapsam sayıları
+
+Günde 5 saat, haftada 5 gün senaryosu ayrıca hesaplandı:
+
+| Durum | Etkin saat/hafta | Süre |
+| --- | --- | --- |
+| Tam zamanlı işi var (tavan 3 sa) | 17,0 | 10,7 yıl |
+| Yarı zamanlı veya tam (tavan 5-7 sa) | 20,0 | 9,1 yıl |
+| + sanat rolü dolar | 20,0 | 7,3 yıl |
+| + demo bitmiş, deneyim kazanılmış | 20,0 | 5,2 yıl |
+| + tüm asistanlar | 20,0 | 4,4 yıl |
+
+Not: günde 2 saatten 5 saate çıkmak, tam zamanlı işi olan biri için
+beklendiği kadar kazandırmıyor. Tavanın üstündeki saatler yarım değerde
+sayıldığı için katsayı 0,80'den 0,68'e düşüyor.
+
+En iyimser okuma bile 9. maddedeki şişmeyi taşıyor, yani gerçek sayı daha
+düşük. Ne kadar düşük olduğu ölçülmeden söylenemez.
+
+### Kullanıcının içerik aracı iddiası
+
+Kullanıcı, sanat rolünü bir internal tool'un dolduracağını ve bölge başına
+147 saatlik kotanın ikinci bölgede 20 saate inebileceğini söyledi. İddia
+olduğunu kendisi belirtti.
+
+**Tavanı hesaplandı ve 20 değil.** 147 saatin dağılımı: kod 49, sanat 37,
+tasarım 32, yazım 22, ses 7. Araç sadece sanata dokunuyor; sanatı tamamen
+sıfırlasa bile bölge 110 saate iner. 20 saate inmesi için sanat dışındaki
+işlerin de yüzde 82'sinin yok olması gerekir, yani 24 krallığın lore'u ve
+her Warden'ın özgün mekaniği dahil. Bir pixel art üreteci lore yazmıyor.
+
+**Ama zayıf hâli hem mümkün hem değerli.** Sanat 37 saatten 10 saate inse,
+12 bölgede 324 saat eder. Bu aynı zamanda aracın başabaş noktası: 324
+saatten kısa sürede yazılabiliyorsa kârlı.
+
+**Asıl kazanç saat değil sahiplik.** Sanat rolü boş ve bu Faz B'nin en uzun
+süredir bekleyen şartı. Araç işe yararsa işkolunun sahibi olur, Kalite
+kapısı açılır. Ama araç bir sahip değildir: birinin çalıştırması, ayıklaması
+ve 32px tutarlılığını koruması gerekir. Aracı kurup sanatı otomatik
+"sahipli" saymak, 7. maddedeki hatanın tekrarı olur.
+
+**Panoda bunun yeri var:** Ön Üretim'in risk kaydı ve Prototip'in "en
+riskli varsayımın testi" teslimatı. Doğru hamle tartışmak değil, en küçük
+denemeyle sınamak (beş kılıcı parçalara ayır, 20 çocuk üret, kaçı elle
+çizilmiş kalitede). Bir öğleden sonra.
+
+**Zamanlama uyarısı değişmedi:** `content.js` bölge üretecinin tek bölgelik
+bir ilk sürümde saf zarar olduğunu yazıyor. Araç 12 bölge yapılacaksa
+kârlı. Denemeyi şimdi yapmak ise ayrı bir şey ve serbest.
+
+---
+
 ## Ne yapıldı (v3.7: profil eskimesi)
 
 7 Eylül 2026. Listedeki 6. madde kapatıldı. Kural zaten yazılıydı, sadece
