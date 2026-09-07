@@ -3,6 +3,7 @@ import Icon from './Icon.jsx'
 import NumberField from './NumberField.jsx'
 import ArchiveDetail from './ArchiveDetail.jsx'
 import DisciplineOwnership from './DisciplineOwnership.jsx'
+import TeamSizeField from './TeamSizeField.jsx'
 import { computeEstimate, formatDate } from '../lib/estimate.js'
 import { yedekMetni } from '../lib/storage.js'
 import { GENRES, findGenre } from '../data/genres.js'
@@ -11,7 +12,6 @@ import {
   EXPERIENCE_LEVELS,
   ENGINE_FAMILIARITY,
   ART_APPROACHES,
-  TEAM_SIZES,
   MULTIPLAYER_MODES,
   PLATFORM_TARGETS,
   AI_TOOLS,
@@ -30,7 +30,6 @@ const PROFILE_FIELDS = [
   { key: 'artId', label: 'Sanat yaklaşımı', options: ART_APPROACHES },
   { key: 'multiplayerId', label: 'Çok oyunculu', options: MULTIPLAYER_MODES },
   { key: 'platformId', label: 'Platform', options: PLATFORM_TARGETS },
-  { key: 'teamId', label: 'Ekip', options: TEAM_SIZES },
 ]
 
 export default function SettingsView({ project, archive, actions, yedek }) {
@@ -99,6 +98,8 @@ export default function SettingsView({ project, archive, actions, yedek }) {
             </select>
           </div>
         ))}
+
+        <TeamSizeField profile={project.profile} onChange={actions.setProfile} />
 
         <DisciplineOwnership
           profile={project.profile}

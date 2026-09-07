@@ -1,5 +1,78 @@
 # Proje Panosu: Durum Notu
 
+## Ne yapıldı (v3.6: ekip kaç kişi)
+
+7 Eylül 2026. Kullanıcı istedi: ekip üç kişiden fazla da olabilmeli, kişi
+sayısını kullanıcı seçsin.
+
+### Eski hâli neden yetmiyordu
+
+Ekip üç kademeli bir listeydi: yalnızım (1,00), iki kişiyiz (0,65), üç veya
+dört kişiyiz (0,45). Beş kişilik bir ekip hiç sorulamıyordu ve üç ile dört
+kişi aynı kefeye giriyordu.
+
+Bu, panonun kendi kuralına aykırıydı: sistem doğruyu söyler. Dört kişilik bir
+ekibe üç kişinin sayısını göstermek, doğru olmayan bir sayıyı güvenle
+göstermektir.
+
+### Çarpan artık formülden geliyor
+
+`multiplier = kisi ^ -0,62`
+
+**Üs uydurulmadı, eski tablonun kesin iki noktasına oturtuldu:** bir kişi 1,00
+ve iki kişi 0,65. İkisini birden veren üs 0,62. Yani eğri yeni bir varsayım
+getirmiyor, zaten kabul edilmiş olanı sürdürüyor.
+
+| Kişi | Çarpan | Kişi | Çarpan |
+| --- | --- | --- | --- |
+| 1 | 1,00 | 5 | 0,37 |
+| 2 | 0,65 | 6 | 0,33 |
+| 3 | 0,51 | 8 | 0,28 |
+| 4 | 0,42 | 10 | 0,24 |
+
+Eski tablonun "üç veya dört" kademesi 0,45'ti ve eğrinin üç (0,51) ile dört
+(0,42) değerlerinin tam ortasına düşüyor. Kademe bir ortalamaymış, eğri onu
+ikiye ayırıyor.
+
+Eğri düz oransal değil, çünkü kişi eklemek işi düz bölmez. İki kişi işi
+yarıya değil 0,65'e indiriyor; aradaki fark koordinasyon maliyeti.
+
+### Sınırlar yazılı
+
+`TEAM_SIZE_MAX` 20: bu araç solo ve küçük ekipler için yazıldı.
+
+`TEAM_SIZE_TRUSTED` 6: tablo dört kişiye kadar gözlemden geliyor, ötesi aynı
+eğrinin uzatılması. Uzatma bir ölçüm değildir ve arayüz bunu söylüyor:
+altı kişiden sonra "bu sayı ölçümün dışında, hesap koordinasyonun bedava
+olduğunu varsayar" uyarısı çıkıyor. Ton kuralı gereği gerçekçi olmayan sayı,
+gerçekçi olanla aynı görünmüyor.
+
+### Eski kayıtlar sessizce değişmiyor
+
+`teamId` alanı silinmedi. Kişi sayısı olmayan bir kayıt okunduğunda kademe
+kişi sayısına çevriliyor (tek 1, iki 2, üç veya dört 3) ve **Ayarlar ekranı bu
+durumu yazıyor**: eski tabloda üç ve dört kişi ikisi de 0,45 alıyordu, artık
+üç kişi 0,51.
+
+Bu, üç kişilik bir kayıtta tahmini yüzde 13 artırır. Sayı kötüleşmedi, eski
+kademe iyimser uçtaydı. Değişikliği gizlemek, panonun "sessizce eski bir sayı
+göstermek, sayıyı hiç göstermemekten kötüdür" kuralına aykırı olurdu.
+
+### Test
+
+`scripts/ekip-testi.mjs`, 18 kontrol. En önemlisi ilk ikisi: eğrinin eski
+tablonun kesin noktalarını yeniden ürettiği. O uyum bozulursa eğri artık eski
+tablonun devamı değil, bağımsız bir varsayımdır ve bunu sessizce yapabilir.
+
+Kusur kasten enjekte edildi: üs 0,62 yerine 0,50 yapıldı, test 4 kontrolde
+kırıldı, geri alındı.
+
+Yuvarlama notu: çarpan iki basamağa yuvarlanıyor, bu yüzden üst sınıra doğru
+düzlükler çıkıyor (17 ve 18 kişi ikisi de 0,17). Test bunu kabul ediyor ama
+1 ile 6 arasında her adımın gerçekten azalmasını ayrıca kontrol ediyor.
+
+---
+
 ## Ne yapıldı (v3.5: sahipsiz işkolu)
 
 7 Eylül 2026. Listedeki 7. madde kapatıldı. Bu madde diğerlerinden farklıydı:

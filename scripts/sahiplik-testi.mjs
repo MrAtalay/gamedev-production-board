@@ -34,6 +34,7 @@ const temel = {
   engineId: 'orta',
   artId: 'elle',
   teamId: 'ucdort',
+  teamSize: 3,
   dailyMinutes: 360,
   daysPerWeek: 6,
   deadline: '2027-06-01',
@@ -49,7 +50,7 @@ const sahipsiz = createProject({
 console.log('1. Hicbir iskolu sahipsiz degilse davranis degismiyor')
 const etkiSahipli = teamEffect(sahipli)
 kontrol(
-  'carpan ekip carpanina esit (0,45)',
+  'carpan ekip carpanina esit (uc kisi icin 0,51)',
   Math.abs(etkiSahipli.factor - etkiSahipli.teamMultiplier) < 0.0001,
   String(etkiSahipli.factor)
 )
@@ -69,10 +70,10 @@ kontrol(
   etkiSahipsiz.perDiscipline.kod.factor === etkiSahipsiz.teamMultiplier,
   String(etkiSahipsiz.perDiscipline.kod.factor)
 )
-// Elle hesap: 0,75 x 0,45 + 0,25 x 1 = 0,5875
+// Elle hesap: 0,75 x 0,51 + 0,25 x 1 = 0,6325
 kontrol(
-  'toplam carpan 0,5875',
-  Math.abs(etkiSahipsiz.factor - 0.5875) < 0.0001,
+  'toplam carpan 0,6325',
+  Math.abs(etkiSahipsiz.factor - 0.6325) < 0.0001,
   String(etkiSahipsiz.factor)
 )
 
@@ -86,10 +87,10 @@ kontrol(
 )
 
 console.log('4. Yalniz calisirken sayi degismiyor')
-const tekSahipli = createProject({ ...temel, teamId: 'tek' }).profile
+const tekSahipli = createProject({ ...temel, teamSize: 1 }).profile
 const tekSahipsiz = createProject({
   ...temel,
-  teamId: 'tek',
+  teamSize: 1,
   unownedDisciplines: { sanat: true },
 }).profile
 kontrol(

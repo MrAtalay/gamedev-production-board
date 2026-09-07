@@ -31,7 +31,11 @@ function buildProfile(input) {
     experienceId: input.experienceId,
     engineId: input.engineId,
     artId: input.artId,
-    teamId: input.teamId,
+    // Kaç kişisiniz. Çarpan bu sayıdan türetiliyor.
+    teamSize: Number(input.teamSize) || 1,
+    // Eski üç kademeli alan. Yeni projelerde doldurulmuyor, sadece daha
+    // önce kaydedilmiş projelerin çevrilmesi için okunuyor.
+    teamId: input.teamId || null,
     // Hangi işkolunda kimse yok. Ekip çarpanı bu işkollarına uygulanmaz,
     // çünkü sahipsiz iş ekip büyüdüğü için kısalmaz.
     unownedDisciplines: input.unownedDisciplines || {},

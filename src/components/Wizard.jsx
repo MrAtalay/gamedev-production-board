@@ -2,6 +2,7 @@
 import Icon from './Icon.jsx'
 import NumberField from './NumberField.jsx'
 import DisciplineOwnership from './DisciplineOwnership.jsx'
+import TeamSizeField from './TeamSizeField.jsx'
 import { loadDraft, saveDraft } from '../lib/storage.js'
 import { GENRES, findGenre } from '../data/genres.js'
 import {
@@ -9,7 +10,6 @@ import {
   EXPERIENCE_LEVELS,
   ENGINE_FAMILIARITY,
   ART_APPROACHES,
-  TEAM_SIZES,
   MULTIPLAYER_MODES,
   PLATFORM_TARGETS,
   AI_TOOLS,
@@ -40,7 +40,7 @@ const EMPTY_FORM = {
   engineId: 'yeni',
   engineName: '',
   artId: 'minimal',
-  teamId: 'tek',
+  teamSize: 1,
   unownedDisciplines: {},
   multiplayerId: 'tek',
   platformId: 'pc',
@@ -571,20 +571,7 @@ export default function Wizard({ onFinish }) {
           </div>
 
           <div className="card">
-            <div className="field">
-              <label>Ekip</label>
-              <div className="choice-grid">
-                {TEAM_SIZES.map((o) => (
-                  <button
-                    key={o.id}
-                    className={'choice' + (form.teamId === o.id ? ' selected' : '')}
-                    onClick={() => set({ teamId: o.id })}
-                  >
-                    <div className="choice-title">{o.name}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
+            <TeamSizeField profile={form} onChange={set} />
 
             <div className="divider" />
 

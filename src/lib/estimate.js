@@ -10,6 +10,8 @@ import {
   ENGINE_FAMILIARITY,
   ART_APPROACHES,
   TEAM_SIZES,
+  TEAM_EXPONENT,
+  TEAM_SIZE_MAX,
   MULTIPLAYER_MODES,
   PLATFORM_TARGETS,
   AI_TOOLS,
@@ -89,6 +91,26 @@ export function aiEffect(profile) {
   }
 }
 
+// Profildeki kişi sayısı.
+//
+// Eski kayıtlarda bu alan yok, sadece üç kademeli teamId var. O kayıtlar
+// kademenin kişi karşılığına çevriliyor. Arayüz bu çevrimi gizlemiyor:
+// eski bir kayıtta çarpanın neden değiştiğini Ayarlar ekranı yazıyor.
+export function teamSize(profile) {
+  const girilen = Number(profile.teamSize)
+  if (girilen >= 1) return Math.min(Math.round(girilen), TEAM_SIZE_MAX)
+  return findOption(TEAM_SIZES, profile.teamId).size
+}
+
+// Kişi sayısından ekip çarpanı. Gerekçesi options.js içinde yazılı.
+//
+// İki basamağa yuvarlanıyor: eski tablo da iki basamaklıydı ve arayüzde
+// gösterilen sayı ile hesapta kullanılan sayı aynı olmalı.
+export function teamMultiplier(profile) {
+  const kisi = teamSize(profile)
+  return Math.round(Math.pow(kisi, -TEAM_EXPONENT) * 100) / 100
+}
+
 // Ekip büyüklüğünün toplam iş üstündeki etkisi.
 //
 // Kural, yapay zeka asistanlarındakiyle aynı: bir çarpan sadece gerçekten
@@ -103,7 +125,7 @@ export function aiEffect(profile) {
 export function teamEffect(profile) {
   const genre = findGenre(profile.genreId)
   const shares = genre.disciplineShares || DEFAULT_DISCIPLINE_SHARES
-  const team = findOption(TEAM_SIZES, profile.teamId)
+  const carpan = teamMultiplier(profile)
   // Eski kayıtlarda bu alan yok: hepsi sahipli sayılır, sonuç değişmez.
   const unowned = profile.unownedDisciplines || {}
 
@@ -114,7 +136,7 @@ export function teamEffect(profile) {
   Object.keys(shares).forEach((discipline) => {
     const share = shares[discipline]
     const isUnowned = Boolean(unowned[discipline])
-    const factor = isUnowned ? 1 : team.multiplier
+    const factor = isUnowned ? 1 : carpan
 
     if (isUnowned) unownedShare += share
     perDiscipline[discipline] = { share, factor, unowned: isUnowned }
@@ -126,7 +148,8 @@ export function teamEffect(profile) {
     perDiscipline,
     // Ekip çarpanının yerine geçen sayı: 1 ise ekipten hiç kazanç yok.
     factor: total,
-    teamMultiplier: team.multiplier,
+    teamMultiplier: carpan,
+    teamSize: teamSize(profile),
     unownedShare,
     unownedNames: DISCIPLINES.filter((d) => unowned[d.id] && shares[d.id] > 0).map(
       (d) => d.name

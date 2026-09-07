@@ -101,11 +101,49 @@ export const ART_APPROACHES = [
 
 // Iki kisi, bir kisinin iki kati hizli degildir: iletisim ve
 // koordinasyon payi vardir.
+// Eski üç kademeli ekip tablosu.
+//
+// Artık kişi sayısı tek tek giriliyor (TEAM_EXPONENT). Bu liste iki iş
+// için duruyor: eski kayıtlardaki teamId'yi kişi sayısına çevirmek ve
+// eğrinin nereden türetildiğini göstermek.
 export const TEAM_SIZES = [
-  { id: 'tek', name: 'Yalnızım', multiplier: 1 },
-  { id: 'iki', name: 'İki kişiyiz', multiplier: 0.65 },
-  { id: 'ucdort', name: 'Üç veya dört kişiyiz', multiplier: 0.45 },
+  { id: 'tek', name: 'Yalnızım', size: 1, multiplier: 1 },
+  { id: 'iki', name: 'İki kişiyiz', size: 2, multiplier: 0.65 },
+  { id: 'ucdort', name: 'Üç veya dört kişiyiz', size: 3, multiplier: 0.45 },
 ]
+
+// Kişi sayısından ekip çarpanı: multiplier = kisi ^ -TEAM_EXPONENT.
+//
+// Üs uydurulmadı, yukarıdaki tablonun kesin iki noktasına oturtuldu:
+// bir kişi 1,00 ve iki kişi 0,65. İkisini birden veren üs 0,62'dir
+// (0,65 = 2 ^ -0,62). Yani eğri yeni bir varsayım getirmiyor, zaten
+// kabul edilmiş olanı sürdürüyor.
+//
+// Ürettiği tablo:
+//
+//   1 kisi  1,00      5 kisi  0,37
+//   2 kisi  0,65      6 kisi  0,33
+//   3 kisi  0,51      8 kisi  0,28
+//   4 kisi  0,42     10 kisi  0,24
+//
+// Eski tablonun "üç veya dört" kademesi 0,45'ti; eğrinin üç (0,51) ve
+// dört (0,42) değerlerinin tam ortası. Kademe bir ortalamaymış, eğri
+// onu ikiye ayırıyor.
+//
+// İki kişi neden 0,50 değil de 0,65: ikinci kişi işi ikiye bölmez,
+// koordinasyon maliyeti çıkarır. Aynı sebeple eğri düz oransal değil.
+export const TEAM_EXPONENT = 0.62
+
+// Kişi sayısı alanının üst sınırı. Bu araç solo ve küçük ekipler için
+// yazıldı; sayı buradan büyükse verilen cevap zaten anlamını yitirir.
+export const TEAM_SIZE_MAX = 20
+
+// Eğrinin güvenilir sayıldığı üst sınır.
+//
+// Tablo dört kişiye kadar gözlemden geliyor, ötesi aynı eğrinin
+// uzatılması. Uzatma bir ölçüm değildir ve arayüz bunu söyler: altı
+// kişiden sonra hesap, koordinasyonun bedava olduğunu varsayar.
+export const TEAM_SIZE_TRUSTED = 6
 
 // Çok oyunculu, solo geliştiricide en çok hafife alınan kalem. Sonradan
 // eklenen bir özellik değildir: her sistemi baştan etkiler. Durum
