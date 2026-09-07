@@ -1575,6 +1575,70 @@ Yapılacak şey hata fırlatmak değil (eski kayıtlar açılamaz hale gelir),
 bilinmeyen kimliği görünür kılmak: seçilen değerin kaydedilenden farklı
 olduğunu arayüzde söylemek. Küçük iş, ama nereye yazılacağı düşünülmeli.
 
+### 9. Ölçek çarpanı faz ayrımı yapmıyor
+
+Kullanıcı sordu: bir bölge yapmak diğer bölgeleri hızlandırmaz mı? Sistemler
+bir kez yazılıyor, sonraki bölgeler büyük ölçüde istatistik değişikliği.
+Sorunun peşine düşünce panonun **kendi içinde iki farklı cevabı olduğu**
+ortaya çıktı.
+
+**Faz paylarına göre:** Üretim fazı toplamın yüzde 35'i. Tam kapsamda 1910
+saat, 13 bölgeye bölününce bölge başına 147 saat. Kalan yüzde 65 sistemler,
+tasarım, prototip ve cila; büyük ölçüde bir kez yapılıyor. Bu okuma
+kullanıcıyı doğruluyor.
+
+**Ölçek çarpanına göre:** aynı girdilerle mikro 171 saat, büyük 5458 saat.
+Aradaki 5287 saat 12 bölgeye bölününce bölge başına 441 saat, yani ilkinin
+2,6 katı. Bu okuma kullanıcıyı çürütüyor.
+
+Üç kat fark, aynı panonun içinde.
+
+**Sebep:** ölçek çarpanı (mikro 0,25 / küçük 1 / orta 3 / büyük 8) tahminin
+tamamına uygulanıyor, faz ayrımı yapmadan. Konsept fazı mikroda 5 saat,
+büyükte 164 saat. Tasarım dokümanı 32 kez yazılmıyor. Prototip çekirdek
+döngüyü ölçekten bağımsız olarak bir kez kanıtlıyor.
+
+Bir kısmı gerçekten ölçekle büyüyor (13 bölgenin tasarımı, 24 krallığın
+lore'u), ama sistem prototipi ve dikey dilim büyümüyor. Pano hepsini birden
+büyütüyor ve büyük kapsamları olduğundan pahalı gösteriyor.
+
+**Bugünün üçüncü sessiz yanlış cevabı ve üçü de aynı kalıptan:** bir çarpan,
+gerekçesinin kapsadığından daha geniş bir alana uygulanıyor. 7. maddede ekip
+çarpanı sahipsiz işkoluna, 8. maddede varsayılan seçenek bilinmeyen kimliğe,
+burada ölçek çarpanı bir kez yapılan fazlara.
+
+### Ton tarafı: abartılmış sertlik dürüstlük değildir
+
+Bu maddenin ton kurallarını ilgilendiren bir yanı var ve ayrıca yazılması
+gerekiyor.
+
+Panonun kimliği "sistem doğruyu söyler, motive etmez" üstüne kurulu ve bu
+doğru. Ama iki şey birbirinden ayrılmalı:
+
+- Gerçek bir kısıtı sert söylemek, aracın işi.
+- **Şişmiş bir sayıyı sert söylemek dürüstlük değil, hata.**
+
+Tam kapsam için çıkan "28 yıl" ifadesi ikincisi. Hem caydırıcı hem de bir
+modelleme hatasıyla şişkin, ve bu en kötü bileşim: kullanıcı doğru olmayan
+bir sebeple vazgeçer. "Cezalandırılmaz" kuralı bunu da kapsıyor.
+
+### Ne zaman yapılacak
+
+Bulgu ikiye ayrılıyor ve ikisinin zamanlaması farklı.
+
+**Yapısal kısım ölçüm gerektirmiyor.** Tasarım dokümanının 32 kez
+yazılmadığı bugün de doğru. Bu kısım bilinerek bekletiliyor, bilinmediği
+için değil.
+
+**Doğru oranlar ölçüm gerektiriyor.** "Ön Üretim ölçekle ne kadar büyür"
+sorusuna bugün verilecek her cevap uydurma olur. Bekleneceği için değil,
+panonun kendi kuralı olduğu için: sistem sadece doğrulayabildiğini söyler.
+
+Ama beklenen şey oyunun bitmesi değil. Oturumlar zaten faza bağlı
+kaydediliyor ve v3.3'te faz karşılaştırması var. Veri, demo üzerinde
+çalışılmaya başlandığı anda birikmeye başlar. Bu madde 1. maddeye
+(kalibrasyon) bağlıdır, yayına değil.
+
 Bu, panonun kaçırdığı gerçek bir durumu otomatik yakalar. Denetimin en
 önemli bulgusu ("sanat rolünün sahibi belirlenmemiş") tam olarak buydu ve
 pano onu göremedi.
