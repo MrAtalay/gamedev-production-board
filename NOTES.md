@@ -177,7 +177,7 @@ alır. Payların toplamı 1 olduğu için hiçbir işkolu sahipsiz değilken son
 eski davranışın birebir aynısı.
 
 Denetim profiline yakın bir kurulumda (rol yapma, orta ölçek, ilk oyun, üç
-kişi, elle çizilen sanat) ölçülen fark:
+kişi) ölçülen fark:
 
 | | Çarpan | Gereken saat |
 | --- | --- | --- |
@@ -186,6 +186,24 @@ kişi, elle çizilen sanat) ölçülen fark:
 
 520 saat, yani yüzde 31. Panonun bu proje için verdiği cevap bu kadar
 iyimserdi.
+
+**Düzeltme, 7 Eylül 2026.** Yukarıdaki iki saat, yazıldığında "elle çizilen
+sanat" diye etiketlenmişti ve bu yanlıştı. Test profilinde `artId: 'elle'`
+yazıyordu; panoda öyle bir seçenek yok (`minimal`, `hazir`, `kendi`) ve
+`findOption` bilinmeyen kimliği sessizce listenin ilkine düşürüyor. Yani
+hesap Minimal sanatla (0,70) yapılmış. Sayılar kendi içinde tutarlı, sadece
+etiketi yanlıştı; etiket kaldırıldı ve test dosyaları `kendi` (1,35) ile
+düzeltildi.
+
+Gerçek sanat yaklaşımıyla (Kendi sanatımı üreteceğim) aynı karşılaştırma:
+3718 saatten 4611 saate. Yüzde farkı da v3.6'dan sonra 31 değil 24, çünkü
+üç kişinin çarpanı 0,45 iken 0,51 oldu.
+
+**Bu, bugünün ikinci sessiz yanlış cevabı ve ilkiyle aynı aileden:**
+`findOption` bilinmeyen bir kimlik için hata vermiyor, ilk seçeneği
+döndürüyor. Kaydedilmiş bir profilde yazım hatası olsa, pano sessizce
+"Minimal" varsayıp güvenle yanlış sayı gösterir. Karar verilmedi, aşağıdaki
+listeye 8. madde olarak eklendi.
 
 ### Kapı: `disciplinesOwned`
 
@@ -1536,6 +1554,26 @@ sahipsiz payın ekip çarpanından muaf tutulması. Üstüne bir kapı koşulu:
 işin belli bir yüzdesi sahipsizse kapı açılmaz.
 
 **Yapıldı, 7 Eylül 2026 (v3.5).** Ayrıntısı yukarıdaki v3.5 bölümünde.
+
+### 8. Bilinmeyen seçenek kimliği sessizce ilk seçeneğe düşüyor
+
+`findOption` bir kimliği bulamazsa listenin ilk maddesini döndürüyor
+(`list.find(...) || list[0]`). `findGenre` de aynı. Bu, eski kayıtları
+çalıştırmak için konulmuş makul bir savunma, ama yanlış tarafa savunuyor:
+kaydedilmiş bir profilde yazım hatası veya kaldırılmış bir seçenek olsa,
+pano sessizce ilk seçeneği varsayıp güvenle yanlış bir sayı gösterir.
+
+Bu gerçekten yaşandı ve bizzat panonun kendi test dosyasında yaşandı:
+`artId: 'elle'` yazıldı, öyle bir seçenek yoktu, hesap Minimal (0,70) ile
+yapıldı ve sonuç "elle çizilen sanat" diye etiketlendi. Hiçbir yerde uyarı
+çıkmadı.
+
+7. maddeyle aynı aileden: sessizce verilen yanlış cevap. Farkı, o maddenin
+tek bir çarpanı ilgilendirmesi, bunun her seçenek okumasını ilgilendirmesi.
+
+Yapılacak şey hata fırlatmak değil (eski kayıtlar açılamaz hale gelir),
+bilinmeyen kimliği görünür kılmak: seçilen değerin kaydedilenden farklı
+olduğunu arayüzde söylemek. Küçük iş, ama nereye yazılacağı düşünülmeli.
 
 Bu, panonun kaçırdığı gerçek bir durumu otomatik yakalar. Denetimin en
 önemli bulgusu ("sanat rolünün sahibi belirlenmemiş") tam olarak buydu ve

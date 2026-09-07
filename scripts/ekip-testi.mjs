@@ -90,7 +90,7 @@ const temel = {
   scaleId: 'orta',
   experienceId: 'ilk',
   engineId: 'orta',
-  artId: 'elle',
+  artId: 'kendi',
   dailyMinutes: 360,
   daysPerWeek: 6,
   deadline: '2027-06-01',

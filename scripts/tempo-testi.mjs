@@ -40,7 +40,7 @@ const proje = createProject({
   scaleId: 'kucuk',
   experienceId: 'yeni',
   engineId: 'yeni',
-  artId: 'basit',
+  artId: 'minimal',
   teamId: 'tek',
   dailyMinutes: 60,
   daysPerWeek: 5,

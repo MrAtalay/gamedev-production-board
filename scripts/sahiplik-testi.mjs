@@ -32,7 +32,7 @@ const temel = {
   scaleId: 'orta',
   experienceId: 'ilk',
   engineId: 'orta',
-  artId: 'elle',
+  artId: 'kendi',
   teamId: 'ucdort',
   teamSize: 3,
   dailyMinutes: 360,

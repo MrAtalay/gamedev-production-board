@@ -38,7 +38,7 @@ const proje = createProject({
   scaleId: 'orta',
   experienceId: 'ilk',
   engineId: 'orta',
-  artId: 'elle',
+  artId: 'kendi',
   teamSize: 3,
   dailyMinutes: 60,
   daysPerWeek: 5,
