@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState } from 'react'
 import Icon from './Icon.jsx'
 import NumberField from './NumberField.jsx'
+import DisciplineOwnership from './DisciplineOwnership.jsx'
 import { loadDraft, saveDraft } from '../lib/storage.js'
 import { GENRES, findGenre } from '../data/genres.js'
 import {
@@ -40,6 +41,7 @@ const EMPTY_FORM = {
   engineName: '',
   artId: 'minimal',
   teamId: 'tek',
+  unownedDisciplines: {},
   multiplayerId: 'tek',
   platformId: 'pc',
   aiTools: {},
@@ -583,6 +585,10 @@ export default function Wizard({ onFinish }) {
                 ))}
               </div>
             </div>
+
+            <div className="divider" />
+
+            <DisciplineOwnership profile={form} onChange={set} />
           </div>
         </div>
       )}

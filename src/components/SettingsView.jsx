@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import Icon from './Icon.jsx'
 import NumberField from './NumberField.jsx'
 import ArchiveDetail from './ArchiveDetail.jsx'
+import DisciplineOwnership from './DisciplineOwnership.jsx'
 import { computeEstimate, formatDate } from '../lib/estimate.js'
 import { yedekMetni } from '../lib/storage.js'
 import { GENRES, findGenre } from '../data/genres.js'
@@ -98,6 +99,11 @@ export default function SettingsView({ project, archive, actions, yedek }) {
             </select>
           </div>
         ))}
+
+        <DisciplineOwnership
+          profile={project.profile}
+          onChange={actions.setProfile}
+        />
 
         <div className="hint-box">
           <strong>İçerik hacmi:</strong> {genre.contentUnits[project.profile.scaleId]}

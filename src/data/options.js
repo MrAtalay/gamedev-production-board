@@ -269,6 +269,25 @@ export const DEFAULT_DISCIPLINE_SHARES = {
   karar: 0.27,
 }
 
+// İşkollarının okunabilir adları. Paylar türe göre değiştiği için burada
+// pay yok, sadece kimlik ve ad var. Sahiplik arayüzü bu listeden besleniyor.
+export const DISCIPLINES = [
+  { id: 'kod', name: 'Kod' },
+  { id: 'sanat', name: 'Sanat' },
+  { id: 'ses', name: 'Ses ve müzik' },
+  { id: 'yazim', name: 'Yazım' },
+  { id: 'karar', name: 'Tasarım ve karar' },
+]
+
+// Üretime girerken kabul edilen sahipsiz iş tavanı.
+//
+// Bu sayı ölçülmüş değil, çizilmiş bir sınırdır ve bunu gizlemek yerine
+// yazıyoruz. Gerekçesi şu: küçük bir pay (ses yüzde 4 gibi) hazır paketle
+// veya tek seferlik bir iş anlaşmasıyla kapatılabilir, bu yüzden üretimi
+// durdurmak için sebep değildir. Sanat gibi çeyreklik bir pay kapatılamaz;
+// o iş kimse yapmadan bitmez. Sınır ikisinin arasına konuldu.
+export const UNOWNED_WORK_LIMIT = 0.1
+
 // Kod asistanının kazancı deneyime bağlıdır ve bu, sisteme yazılmış en
 // önemli dürüstlük maddesi. Üretilen kodu değerlendiremiyorsan, anlamadığın
 // kodu ayıklamak kazandığın süreyi büyük ölçüde geri alır.

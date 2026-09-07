@@ -32,6 +32,9 @@ function buildProfile(input) {
     engineId: input.engineId,
     artId: input.artId,
     teamId: input.teamId,
+    // Hangi işkolunda kimse yok. Ekip çarpanı bu işkollarına uygulanmaz,
+    // çünkü sahipsiz iş ekip büyüdüğü için kısalmaz.
+    unownedDisciplines: input.unownedDisciplines || {},
     multiplayerId: input.multiplayerId || 'tek',
     platformId: input.platformId || 'pc',
     aiTools: input.aiTools || {},

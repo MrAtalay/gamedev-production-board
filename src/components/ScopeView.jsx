@@ -78,6 +78,13 @@ export default function ScopeView({ project, actions }) {
             ? ' Aradaki fark ' + estimate.gapHours + ' saat.'
             : ' Kapsam süreye sığıyor.'}
         </p>
+        {estimate.team.unownedNames.length > 0 && (
+          <p className="tiny muted" style={{ marginTop: 8 }}>
+            İşin %{Math.round(estimate.team.unownedShare * 100)}'i sahipsiz (
+            {estimate.team.unownedNames.join(', ')}) ve bu pay ekip çarpanından
+            muaf tutuluyor. Yukarıdaki saat bu düzeltmeyi içeriyor.
+          </p>
+        )}
       </div>
 
       {olculen && (

@@ -733,6 +733,7 @@ export const PHASES = [
       checks: [
         { id: 'dd-auto-1', type: 'auto', verify: 'deliverablesDone' },
         { id: 'dd-auto-2', type: 'auto', verify: 'unitMathOk' },
+        { id: 'dd-auto-3', type: 'auto', verify: 'disciplinesOwned' },
         {
           id: 'dd-self-1',
           type: 'self',
@@ -752,7 +753,9 @@ export const PHASES = [
       ],
       failAdvice:
         'Birim süresi bütçene sığmıyorsa üretime başlama. İçerik sayısını azaltmak ' +
-        'burada ucuzdur, üretimin ortasında pahalıdır.',
+        'burada ucuzdur, üretimin ortasında pahalıdır. Aynı şey sahiplik için de ' +
+        'geçerli: işin bir bölümünü kimin yapacağı belli değilse, o bölüm üretim ' +
+        'boyunca beklemez, üretimi bekletir.',
     },
   },
 

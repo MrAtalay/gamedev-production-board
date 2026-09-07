@@ -9,7 +9,8 @@
 // kullanıcının iyimserliğine bırakmak, sistemi işe yaramaz hale getirir.
 
 import { phaseDeliverables, isDeliverableDone, boardStats } from './project.js'
-import { computeEstimate, unitMath } from './estimate.js'
+import { computeEstimate, unitMath, teamEffect } from './estimate.js'
+import { UNOWNED_WORK_LIMIT } from '../data/options.js'
 
 const VERIFIERS = {
   deliverablesDone(project, phase) {
@@ -147,6 +148,50 @@ const VERIFIERS = {
           ' saat aşıyorsun. Bu tempoyla en fazla ' +
           math.suggestedUnits +
           ' birim üretebilirsin.',
+    }
+  },
+
+  // Üretime girerken sorulan soru: bu işi kim yapacak.
+  //
+  // Pano bunu kendi verisinden hesaplayabiliyor, o yüzden kullanıcının
+  // iyimserliğine bırakılmıyor. Ton kuralı gereği suçlamıyor ve emir
+  // vermiyor: durumu ve sayıyı söylüyor, kararı kullanıcıya bırakıyor.
+  disciplinesOwned(project) {
+    const effect = teamEffect(project.profile)
+    const percent = Math.round(effect.unownedShare * 100)
+    const limitPercent = Math.round(UNOWNED_WORK_LIMIT * 100)
+    const text =
+      'Üretimin sahipsiz kalan bölümü işin yüzde ' + limitPercent + "'ini aşmıyor."
+
+    if (effect.unownedNames.length === 0) {
+      return { ok: true, text, detail: 'Sahipsiz işaretlenmiş işkolu yok.' }
+    }
+
+    const liste = effect.unownedNames.join(', ')
+    if (effect.unownedShare <= UNOWNED_WORK_LIMIT) {
+      return {
+        ok: true,
+        text,
+        detail:
+          'Sahipsiz: ' +
+          liste +
+          '. İşin yüzde ' +
+          percent +
+          "'i ediyor, sınırın altında. Kayıtlı, üretime engel değil.",
+      }
+    }
+
+    return {
+      ok: false,
+      text,
+      detail:
+        'Sahipsiz: ' +
+        liste +
+        '. İşin yüzde ' +
+        percent +
+        "'i ediyor ve bu iş kimse yapmadan bitmez. İki yol var, ikisi de " +
+        'meşru: bu işkoluna bir sahip bul, veya kapsamı o işkolunu ' +
+        'küçültecek şekilde değiştir (sanat için: sanat yaklaşımını sadeleştir).',
     }
   },
 

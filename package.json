@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "test": "node scripts/tempo-testi.mjs && node scripts/yedek-testi.mjs && node scripts/kural-testi.mjs",
+    "test": "node scripts/tempo-testi.mjs && node scripts/yedek-testi.mjs && node scripts/sahiplik-testi.mjs && node scripts/kural-testi.mjs",
     "kural": "node scripts/kural-testi.mjs",
     "preview": "vite preview",
     "tek-dosya": "vite build && node scripts/tek-dosya.mjs"

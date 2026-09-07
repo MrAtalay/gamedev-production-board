@@ -1,5 +1,88 @@
 # Proje Panosu: Durum Notu
 
+## Ne yapıldı (v3.5: sahipsiz işkolu)
+
+7 Eylül 2026. Listedeki 7. madde kapatıldı. Bu madde diğerlerinden farklıydı:
+ötekiler panoyu daha iyi yapıyor, bu madde panonun verdiği yanlış bir cevabı
+düzeltiyor.
+
+### Hata neydi
+
+Ekip çarpanı tek bir sayıydı ve `requiredHours` içinde tahminin tamamına düz
+uygulanıyordu. Üç kişi için 0,45, bütün işkollarına aynı şekilde. Ama bir
+işkolunda kimse yoksa o iş ekip büyüdüğü için kısalmaz. Pano, Mytherra'da
+işin yüzde 25'ini tutan sanat işini de üçe bölüp yüzde 55 ucuzlatıyordu ve o
+işi yapacak sıfır kişi vardı.
+
+Kural zaten kodda yazılıydı, sadece ekip çarpanına uygulanmamıştı:
+`aiEffect` yorumunda "hızlanma sadece ilgili işkoluna uygulanır" diyor. Ekip
+çarpanı da bir hızlanma ve aynı kurala tabi.
+
+### Yeni hesap: `teamEffect`
+
+`estimate.js` içine `aiEffect`'in yanına kondu, aynı biçimde çalışıyor:
+sahipsiz işaretlenen payların çarpanı 1 kalır, kalan paylar ekip çarpanını
+alır. Payların toplamı 1 olduğu için hiçbir işkolu sahipsiz değilken sonuç
+eski davranışın birebir aynısı.
+
+Denetim profiline yakın bir kurulumda (rol yapma, orta ölçek, ilk oyun, üç
+kişi, elle çizilen sanat) ölçülen fark:
+
+| | Çarpan | Gereken saat |
+| --- | --- | --- |
+| Sanat sahipli | 0,4500 | 1701 |
+| Sanat sahipsiz | 0,5875 | 2221 |
+
+520 saat, yani yüzde 31. Panonun bu proje için verdiği cevap bu kadar
+iyimserdi.
+
+### Kapı: `disciplinesOwned`
+
+Kalite kapısına (Dikey Dilim, üretime giriş) üçüncü otomatik kontrol olarak
+eklendi. Sahipsiz pay `UNOWNED_WORK_LIMIT` değerini aşarsa kapı açılmaz.
+
+Sınır yüzde 10 ve **bu sayı ölçülmüş değil, çizilmiş bir sınır.** Gerekçesi
+`options.js` içinde yazılı: ses gibi yüzde 4'lük bir pay hazır paketle veya
+tek seferlik bir anlaşmayla kapatılabilir, sanat gibi çeyreklik bir pay
+kapatılamaz. Sınırın altındaki sahipsiz iş engellenmiyor ama gizlenmiyor da,
+kapı gerekçesinde yazılı kalıyor.
+
+Kontrol neden otomatik: pano bunu kendi verisinden hesaplayabiliyor.
+`disciplineShares` her işkolunun payını zaten biliyordu, eksik olan tek şey
+bir işkolunun sahipsiz olduğunu söyleyebilmekti. Denetimin en önemli
+bulgusunu pano kendi kendine yakalayabilirdi, artık yakalıyor.
+
+### Arayüz
+
+`DisciplineOwnership` bileşeni hem sihirbazda (ekip adımı) hem ayarlarda
+duruyor, ikisinin aynı sayıyı göstermesi gerektiği için tek bileşen. Beş
+işkolu, her birinin yanında türe göre payı. İşaretlenince ne olduğunu
+söylüyor: kapsam ekranında da gereken saatin bu düzeltmeyi içerdiği yazılı.
+
+Tek kişilik ekipte çarpan zaten 1 olduğu için saat değişmiyor. Bu durum
+gizlenmiyor, arayüz "yalnız çalıştığın için saat değişmiyor ama Kalite
+kapısı bu işkolunu yine de soruyor" diyor.
+
+### Test
+
+`scripts/sahiplik-testi.mjs`, `npm test` zincirine eklendi. 14 kontrol:
+sahipsizlik yokken sonucun değişmediği, sahipsiz payın çarpandan muaf
+kaldığı, tahminin kısalmayıp uzadığı, tek kişilik ekipte sayının sabit
+kaldığı, alanı olmayan eski kayıtların çökmediği ve kapının hem eşiğin
+üstünde hem altında doğru davrandığı.
+
+KURALLAR.md'deki kurala uyularak kusur kasten enjekte edildi: `teamEffect`
+içindeki koşul kaldırılıp eski düz çarpan geri kondu, testin 3 kontrolde
+kırıldığı ve çıkış kodunun 1 olduğu doğrulandı, sonra geri alındı.
+
+### Sırada
+
+Profil güncellenip pano gerçek Mytherra sayısıyla yeniden çalıştırılmadı.
+Yukarıdaki 1701 ve 2221 sayıları test profiline aittir, Mytherra'nın kendi
+sayısı değildir. Doğru yol hâlâ aynı: profili Ayarlar ekranından girmek.
+
+---
+
 ## Mytherra denetimi: panonun profili gerçeği tutmuyor (4 Eylül 2026, karar verilmedi)
 
 Kullanıcı ev bilgisayarındaki Mytherra deposunu ve Figma lore dosyasını
@@ -1296,6 +1379,8 @@ Gereken veri zaten elde: `disciplineShares` her işkolunun payını
 hesaplıyor. Eksik olan, bir işkolunun sahipsiz işaretlenebilmesi ve
 sahipsiz payın ekip çarpanından muaf tutulması. Üstüne bir kapı koşulu:
 işin belli bir yüzdesi sahipsizse kapı açılmaz.
+
+**Yapıldı, 7 Eylül 2026 (v3.5).** Ayrıntısı yukarıdaki v3.5 bölümünde.
 
 Bu, panonun kaçırdığı gerçek bir durumu otomatik yakalar. Denetimin en
 önemli bulgusu ("sanat rolünün sahibi belirlenmemiş") tam olarak buydu ve

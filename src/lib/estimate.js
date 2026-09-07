@@ -16,6 +16,7 @@ import {
   COMMITMENT_MODES,
   ART_TOOL_OVERLAP,
   DEFAULT_DISCIPLINE_SHARES,
+  DISCIPLINES,
   DEFAULT_COMMITMENT_ID,
   REALISM_FACTOR,
   OVERTIME_REALISM_FACTOR,
@@ -88,6 +89,51 @@ export function aiEffect(profile) {
   }
 }
 
+// Ekip büyüklüğünün toplam iş üstündeki etkisi.
+//
+// Kural, yapay zeka asistanlarındakiyle aynı: bir çarpan sadece gerçekten
+// dokunduğu işkoluna uygulanır. Ekip çarpanı bütün tahmine düz uygulandığı
+// sürece pano, o işi yapacak kimse olmayan bir işkolunu da "üç kişiye
+// bölündü" sayıp ucuzlatır. Bu bir eksik özellik değil, yanlış cevaptır:
+// sahipsiz iş, ekip büyüdüğü için kısalmaz.
+//
+// Sahipsiz işaretlenen payların çarpanı 1 kalır, kalan paylar ekip
+// çarpanını alır. Hiçbir işkolu sahipsiz değilse sonuç eski davranışın
+// aynısıdır, çünkü payların toplamı 1'dir.
+export function teamEffect(profile) {
+  const genre = findGenre(profile.genreId)
+  const shares = genre.disciplineShares || DEFAULT_DISCIPLINE_SHARES
+  const team = findOption(TEAM_SIZES, profile.teamId)
+  // Eski kayıtlarda bu alan yok: hepsi sahipli sayılır, sonuç değişmez.
+  const unowned = profile.unownedDisciplines || {}
+
+  const perDiscipline = {}
+  let total = 0
+  let unownedShare = 0
+
+  Object.keys(shares).forEach((discipline) => {
+    const share = shares[discipline]
+    const isUnowned = Boolean(unowned[discipline])
+    const factor = isUnowned ? 1 : team.multiplier
+
+    if (isUnowned) unownedShare += share
+    perDiscipline[discipline] = { share, factor, unowned: isUnowned }
+    total += share * factor
+  })
+
+  return {
+    shares,
+    perDiscipline,
+    // Ekip çarpanının yerine geçen sayı: 1 ise ekipten hiç kazanç yok.
+    factor: total,
+    teamMultiplier: team.multiplier,
+    unownedShare,
+    unownedNames: DISCIPLINES.filter((d) => unowned[d.id] && shares[d.id] > 0).map(
+      (d) => d.name
+    ),
+  }
+}
+
 // Projenin gerektirdiği toplam saat.
 export function requiredHours(profile) {
   const genre = findGenre(profile.genreId)
@@ -95,7 +141,6 @@ export function requiredHours(profile) {
   const experience = findOption(EXPERIENCE_LEVELS, profile.experienceId)
   const engine = findOption(ENGINE_FAMILIARITY, profile.engineId)
   const art = findOption(ART_APPROACHES, profile.artId)
-  const team = findOption(TEAM_SIZES, profile.teamId)
   // Eski kayıtlarda bu alan yok, o yüzden varsayılan tek oyunculu.
   const multiplayer = findOption(MULTIPLAYER_MODES, profile.multiplayerId || 'tek')
   // Aynı şekilde eski kayıtlarda platform yok, varsayılan bilgisayar.
@@ -107,7 +152,7 @@ export function requiredHours(profile) {
     experience.multiplier *
     engine.multiplier *
     art.multiplier *
-    team.multiplier *
+    teamEffect(profile).factor *
     multiplayer.multiplier *
     platform.multiplier *
     aiEffect(profile).factor
@@ -564,6 +609,7 @@ export function computeEstimate(profile) {
     required,
     requiredWithoutAi: requiredHoursWithoutAi(profile),
     ai: aiEffect(profile),
+    team: teamEffect(profile),
     cost,
     available,
     ratio,
